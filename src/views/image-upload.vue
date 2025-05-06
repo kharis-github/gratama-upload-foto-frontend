@@ -132,6 +132,16 @@
               v-model="pembiayaanBody.kwjbflg"></v-checkbox>
             <v-checkbox name="fakturc" label="Form A/Vin" id="fakturc" v-model="pembiayaanBody.fakturc"></v-checkbox>
 
+            <v-container grid-list-md>
+              <v-form @submit.prevent="uploadImage">
+                <v-file-input v-model="imageFile" label="Pilih Foto" accept="image/*" prepend-icon="mdi-image"
+                  @change="previewImage" outlined></v-file-input>
+
+                <v-img v-if="previewUrl" :src="previewUrl" max-height="200" class="my-4"></v-img>
+
+                <v-btn color="primary" type="submit">Upload Foto</v-btn>
+              </v-form>
+            </v-container>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -208,6 +218,7 @@ export default {
       { text: 'Jenis Produk', value: 'jnsproduk' },
     ]
     const imageFile = ref(null)
+    const base64Image = ref(null) // gambar upload format base64
     const previewUrl = ref(null)
     const message = ref('')
     const error = ref('')
@@ -251,11 +262,12 @@ export default {
 
         if (!response.data) throw new Error('Fetch data gagal!');
 
-        const result = response.data[0];
+        const result = response.data[0]; // TODO: pencairan dapat lebih dari satu, integrasi
 
         // simpan data pencairan di pencairanBody
         pencairanBody.value = {
           nodealer: result.NODEALER,
+          nou: result.NOU,
           outstanding: result.OUTSTANDING,
           nmdealer: result.NMDEALER,
           nmdebitur: result.NMDEBITUR,
@@ -349,40 +361,43 @@ export default {
     }
 
     // thumbnail image
-    function previewImage() {
-      if (this.imageFile) {
-        this.previewUrl = URL.createObjectURL(this.imageFile);
+    const previewImage = () => {
+      // simpan gambar ke tempat yang benar
+      if (imageFile.value) {
+        previewUrl.value = URL.createObjectURL(imageFile.value);
       } else {
-        this.previewUrl = null;
+        previewUrl.value = null;
       }
     }
     // API upload image
     async function uploadImage() {
-      this.loading = true;
-      this.message = '';
-      this.error = '';
-
       const formData = new FormData();
-      formData.append('image', this.imageFile);
+
+      // data gambar
+      formData.append("image", imageFile.value);
+
+      console.log("Gambar: ", imageFile.value)
+      // data parameter
+      formData.append('nodealer', pencairanBody.value.nodealer) // nomor dealer
+      formData.append('noupencairan', pencairanBody.value.nou)
+      formData.append('nourut', pembiayaanBody.value.nou)
+      formData.append('flag', '1') // TODO: isi flag
+      formData.append('height', '200') // TODO: hitung height gambar
+      formData.append('width', '200') // TODO hitung width gambar
+      formData.append('kode', pembiayaanBody.value.kode) // kode pembiayaan
 
       try {
-        const response = await fetch('http://localhost:8080/api/upload', {
-          method: 'POST',
-          body: formData,
+        const response = await axios.post("http://localhost:8080/api/upload", formData, {
+          "Content-Type": "multipart/form-data",
         });
-
-        if (!response.ok) throw new Error('Upload gagal');
-
-        const result = await response.json();
-        this.message = result.message || 'Upload berhasil!';
-        this.imageFile = null;
-        this.previewUrl = null;
+        // const result = await response.json();
+        alert(response.data.message);
       } catch (err) {
-        this.error = err.message || 'Terjadi kesalahan saat upload';
-      } finally {
-        this.loading = false;
+        console.error(err);
+        alert("Gagal mengupload gambar");
       }
     }
+
 
     return {
       noRegFas,
@@ -398,6 +413,9 @@ export default {
       listPembiayaan,
       headers,
       pembiayaanHeaders,
+      imageFile,
+      base64Image,
+      previewUrl,
       handleDealerFieldClick,
       onRowClickPencairan,
       onRowClickPembiayaan,
