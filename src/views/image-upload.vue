@@ -7,9 +7,7 @@
         <v-card-title>
           Daftar Data
           <v-spacer></v-spacer>
-          <v-btn icon @click="closeDialog('daftar-data')">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
+          <v-btn class="ms-auto" text="Close" @click="closeDialog('daftar-data')"></v-btn>
         </v-card-title>
 
         <v-card-text>
@@ -33,9 +31,7 @@
         <v-card-title>
           List Pembiayaan
           <v-spacer></v-spacer>
-          <v-btn icon @click="closeDialog('list-pembiayaan')">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
+          <v-btn class="ms-auto" text="Close" @click="closeDialog('list-pembiayaan')"></v-btn>
         </v-card-title>
 
         <v-card-text>
@@ -59,10 +55,9 @@
       <v-card>
         <v-card-title primary-title>
           Pencairan Pinjaman
+          <v-spacer></v-spacer>
+          <v-btn class="ms-auto" text="Close" @click="closeDialog('pencairan')"></v-btn>
         </v-card-title>
-        <v-btn icon @click="closeDialog('pencairan')">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
         <v-card-text>
           <v-form>
             <v-text-field name="nodealer" label="No. Dealer" id="nodealer"
@@ -94,10 +89,10 @@
       <v-card>
         <v-card-title primary-title>
           Pembiayaan Dealer Detail Unit
+          <v-spacer></v-spacer>
+          <v-btn class="ms-auto" text="Close" @click="closeDialog('pembiayaan-dealer')"></v-btn>
         </v-card-title>
-        <v-btn icon @click="closeDialog('pembiayaan-dealer')">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
+
         <v-card-text>
           <v-form>
             <v-text-field name="tgltrn" label="Tanggal Pencairan" id="tgltrn"
@@ -142,9 +137,8 @@
               <v-form @submit.prevent="uploadImage">
                 <v-row>
                   <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
-                    <v-file-input v-model="field.file" :label="field.keterangan" accept="image/*"
-                      :name="field.kode" prepend-icon="mdi-image" @change="() => { onImageChange(index) }"
-                      outlined></v-file-input>
+                    <v-file-input v-model="field.file" :label="field.keterangan" accept="image/*" :name="field.kode"
+                      prepend-icon="mdi-image" @change="() => { onImageChange(index) }" outlined></v-file-input>
                   </v-col>
                 </v-row>
                 <v-img v-if="previewUrl" :src="previewUrl" max-height="200" class="my-4"></v-img>
@@ -362,12 +356,12 @@ export default {
     // perubahan gambar
     const onImageChange = (index) => {
       // data sekarang disimpan di `dokimg`
-      
+
       // TODO: cari panjang dan tinggi dari image
       dokimg.value[index].height = '200' // cari nanti!
       dokimg.value[index].width = '200' // cari nanti!
       console.log("Dokumentasi Image: ", dokimg.value)
-      
+
       const reader = new FileReader()
       reader.onload = e => {
         // mencari panjang dan lebar dari gambar
@@ -398,7 +392,7 @@ export default {
 
       // append data gambar dan header-header yang berkaitan (height, width, kode)
       const imgList = dokimg.value.filter((x) => x.file)
-      
+
       console.log("Daftar Gambar: ", imgList)
 
       imgList.forEach(field => {
