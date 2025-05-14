@@ -94,7 +94,7 @@
         </v-card-title>
 
         <v-card-text>
-          <v-form>
+          <v-form @submit.prevent="updatePembiayaan">
             <v-text-field name="tgltrn" label="Tanggal Pencairan" id="tgltrn"
               v-model="pembiayaanBody.tgltrn"></v-text-field>
             <v-text-field name="jnsproduk" label="Jenis Produk" id="jnsproduk"
@@ -133,20 +133,25 @@
               v-model="pembiayaanBody.kwjbflg"></v-checkbox>
             <v-checkbox name="fakturc" label="Form A/Vin" id="fakturc" v-model="pembiayaanBody.fakturc"></v-checkbox>
 
-            <v-container grid-list-md>
-              <v-form @submit.prevent="uploadImage">
-                <v-row>
-                  <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
-                    <v-file-input v-model="field.file" :label="field.keterangan" accept="image/*" :name="field.kode"
-                      prepend-icon="mdi-image" @change="() => { onImageChange(index) }" outlined></v-file-input>
-                  </v-col>
-                </v-row>
-                <v-img v-if="previewUrl" :src="previewUrl" max-height="200" class="my-4"></v-img>
-
-                <v-btn color="primary" type="submit">Upload Foto</v-btn>
-              </v-form>
-            </v-container>
           </v-form>
+          <v-container grid-list-md>
+            <v-form @submit.prevent="uploadImage">
+              <v-row>
+                <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
+                  <v-file-input v-model="field.file" :label="field.keterangan" accept="image/*" :name="field.kode"
+                    prepend-icon="mdi-image" @change="onImageChange(index)" outlined></v-file-input>
+                  <v-img v-if="field.src" :src="field.src" max-height="200" class="my-4"></v-img>
+                </v-col>
+                <!-- <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
+                  <v-file-input v-model="imageList[index].file" :label="imageList[index].keterangan" accept="image/*" :name="imageList[index].kode"
+                    prepend-icon="mdi-image" @change="onImageChange2(index)" outlined></v-file-input>
+                  <v-img v-if="imageList[index].src" :src="imageList[index].src" max-height="200" class="my-4"></v-img>
+                </v-col> -->
+              </v-row>
+
+              <v-btn color="primary" type="submit">Upload Foto</v-btn>
+            </v-form>
+          </v-container>
         </v-card-text>
         <v-card-actions>
           <v-btn color="secondary" @click="getPembiayaan">Show List</v-btn>
@@ -298,7 +303,20 @@ export default {
         })
 
         // dokimg menentukan field gambar yang dapat diisi oleh user
-        getDokumentasiImage()
+        await getDokumentasiImage()
+
+        const images = await getImages(noRegFas.value)
+
+        // input gambar ke preview image (kalau ada)
+        images.forEach(img=>{
+          dokimg.value.forEach(item=>{
+            if(item.kode === img.kode){
+              item.src = img.image
+            }
+          })
+        })
+
+        console.log("Dok Image: ", dokimg.value)
 
         // simpan daftar data pembiayaan di list
         if (!response.data) throw new Error('Fetch data pembiayaan gagal!');
@@ -347,47 +365,160 @@ export default {
         console.log("List Pembiayaan: ", listPembiayaan.value)
 
       } catch (error) {
-        console.error('Gagal fetch data pembiayaan:', err)
+        console.error('Gagal fetch data pembiayaan:', error)
       } finally {
         loading.value = false;
       }
     }
 
-    // perubahan gambar
+    // get data image
+    const getImages = async (value) => {
+      
+      // fetch data foto
+      const resFoto = await axios.post('http://localhost:8080/api/images', {
+        noregfas: value,
+      })
+
+      // console.log("ResFoto Data: ", resFoto.data)
+
+      return resFoto.data
+    }
+
+    // handler perubahan gambar upload pada form penginputan gambar
     const onImageChange = (index) => {
       // data sekarang disimpan di `dokimg`
 
       // TODO: cari panjang dan tinggi dari image
       dokimg.value[index].height = '200' // cari nanti!
       dokimg.value[index].width = '200' // cari nanti!
-      console.log("Dokumentasi Image: ", dokimg.value)
 
-      const reader = new FileReader()
-      reader.onload = e => {
-        // mencari panjang dan lebar dari gambar
-        const img = new Image()
-        img.onload = () => {
-          imageList.value[index].width = img.width
-          imageList.value[index].height = img.height
-        }
-        img.src = e.target.result
+      const file = dokimg.value[index].file;
+      if(file && file instanceof File){
+        const reader = new FileReader()
+        reader.onload = e => {
+          // // mencari panjang dan lebar dari gambar
+          // const img = new Image()
+          // img.onload = () => {
+          //   imageList.value[index].width = img.width
+          //   imageList.value[index].height = img.height
+          // }
+          dokimg.value[index].src = e.target.result
+          // simpan url gambar
+        } 
+        reader.readAsDataURL(file)
+      } else {
+        dokimg.value[index].src = null
       }
 
-      // // 1 | add parameter(s) associated with image
-      // imageList.value[index].kode = dokimg.value[index].kode // field kode
+      console.log("Daftar Image: ", dokimg.value)
+    }
 
-      // console.log("Image List: ", imageList.value)
+    const onImageChange2 = (index) => {
+      // data sekarang disimpan di `dokimg`
 
-      // TODO: 2 | preview image
-      if (imageFile.value) {
-        previewUrl.value = URL.createObjectURL(imageFile.value);
+      // TODO: cari panjang dan tinggi dari image
+      dokimg.value[index].height = '200' // cari nanti!
+      dokimg.value[index].width = '200' // cari nanti!
+
+      const file = dokimg.value[index].file;
+      if(file && file instanceof File){
+        
+        const reader = new FileReader()
+        
+        reader.onload = e => {
+          // 1 | simpan data gambar pada array imagelist
+          imageList.value[index] = {
+            src: e.target.result
+          }
+          // simpan juga di dokimg biar muncul
+          dokimg.value[index].src = e.target.result
+        }
+        
+        reader.readAsDataURL(file)
       } else {
-        previewUrl.value = null;
+        imageList.value[index] = null
+      }
+
+      console.log("Daftar Image: ", imageList.value)
+    }
+
+    // API update data pembiayaan
+    async function updatePembiayaan() {
+      try {
+        const response = await axios.post("http://localhost:8080/api/pembiayaan/updatevalue: ", 
+          {tgltrn: pembiayaanBody.value.tgltrn,
+          jnsproduk: pembiayaanBody.value.jnsproduk,
+          jnskend: pembiayaanBody.value.jnskend,
+          merkkend: pembiayaanBody.value.merkkend,
+          thnbuat: pembiayaanBody.value.thnbuat,
+          warna: pembiayaanBody.value.warna,
+          tipekend: pembiayaanBody.value.tipekend,
+          nopol: pembiayaanBody.value.nopol,
+          nobpkb: pembiayaanBody.value.nobpkb,
+          odometer: pembiayaanBody.value.odometer,
+          konkend: pembiayaanBody.value.konkend,
+          nlpasar: pembiayaanBody.value.nlpasar,
+          nominal: pembiayaanBody.value.nominal,
+          persen: pembiayaanBody.value.persen,
+          bpkbflg: pembiayaanBody.value.bpkbflg,
+          faktura: pembiayaanBody.value.faktura,
+          ktpflg: pembiayaanBody.value.ktpflg,
+          nikflg: pembiayaanBody.value.nikflg,
+          stnkflg: pembiayaanBody.value.stnkflg,
+          kwitansiflg: pembiayaanBody.value.kwitansiflg,
+          nokanosin: pembiayaanBody.value.nokanosin,
+          sphflg: pembiayaanBody.value.sphflg,
+          kwjbflg: pembiayaanBody.value.kwjbflg,
+          fakturc: pembiayaanBody.value.fakturc,
+        }
+         );
+      } catch (error) {
+        console.error(error);
+        alert("Gagal mengupdate data data pembiayaan");
       }
     }
 
     // API upload image
     async function uploadImage() {
+      const formData = new FormData();
+
+      // append data gambar dan header-header yang berkaitan (height, width, kode)
+      // 1 | filter field-field gambar yang mengalami perubahan
+      const imgList = dokimg.value.filter((x) => x.file)
+
+      console.log("Daftar Gambar utk Upload: ", imgList)
+
+      // 2 | append metadata gambar
+      imgList.forEach(field => {
+        // formData.append('kode', field.kode) // kode
+        formData.append(`${field.kode}`, field.file) // file gambar
+        formData.append(`src-${field.kode}`, field.src) // file gambar SEJATI (Base64)
+        formData.append(`height-${field.kode}`, field.height) // tinggi
+        formData.append(`width-${field.kode}`, field.width) // lebar
+      });
+
+      // 3 | append data headers
+      formData.append('nodealer', pencairanBody.value.nodealer) // nomor dealer
+      formData.append('noupencairan', pencairanBody.value.nou)
+      formData.append('nourut', pembiayaanBody.value.nou)
+      formData.append('flag', '1') // TODO: isi flag
+      formData.append('kode', pembiayaanBody.value.kode) // kode pembiayaan
+
+      // 4 | request http
+      try {
+        const response = await axios.post("http://localhost:8080/api/uploadbulk", formData, {
+          "Content-Type": "multipart/form-data",
+        });
+        // const result = await response.json();
+        alert(response.data.message);
+      } catch (err) {
+        console.error(err);
+        alert("Gagal mengupload gambar");
+      }
+    }
+
+    // TODO: API Upload Image 2 (UPLOAD IMAGE DALAM BASE64)
+    async function uploadImage2() {
       const formData = new FormData();
 
       // append data gambar dan header-header yang berkaitan (height, width, kode)
@@ -411,9 +542,17 @@ export default {
 
       console.log("Form Data: ", formData)
 
+      // wrap JSON
+      const payload = {
+        images: images, // Array data gambar
+        nodealer: nodealer, 
+        noupencairan: noupencairan, 
+        flag: flag
+      }
+
       try {
-        const response = await axios.post("http://localhost:8080/api/uploadtesting", formData, {
-          "Content-Type": "multipart/form-data",
+        const response = await axios.post("http://localhost:8080/api/uploadbulk2", JSON.stringify(payload), {
+          'Content-Type': 'application/json',
         });
         // const result = await response.json();
         alert(response.data.message);
@@ -468,8 +607,11 @@ export default {
       onRowClickPencairan,
       onRowClickPembiayaan,
       getPembiayaan,
+      getImages,
       closeDialog,
       onImageChange,
+      onImageChange2,
+      updatePembiayaan,
       uploadImage,
       getDokumentasiImage
     }
