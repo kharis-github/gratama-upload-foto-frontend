@@ -5,12 +5,15 @@
     <v-dialog v-model="dealerDialog" max-width="800px">
       <v-card>
         <v-card-title>
-          Daftar Data
+          Daftar Dealer
           <v-spacer></v-spacer>
           <v-btn class="ms-auto" text="Close" @click="closeDialog('daftar-data')"></v-btn>
         </v-card-title>
 
         <v-card-text>
+          <!-- TODO: Search data dealer -->
+          <v-text-field v-model="dealerQuery" name="search" label="Search..." prepend-inner-icon="mdi-magnify"
+            id="dealersearch" clearable @input="dealerSearch"></v-text-field>
           <v-data-table :headers="headers" :items="dealerList" :loading="loading" loading-text="Mengambil data..."
             class="elevation-1" @click:row="onRowClickPencairan">
             <template #item="{ item }">
@@ -29,7 +32,7 @@
     <v-dialog v-model="dialogListPembiayaan" max-width="800px">
       <v-card>
         <v-card-title>
-          List Pembiayaan
+          List Pencairan
           <v-spacer></v-spacer>
           <v-btn class="ms-auto" text="Close" @click="closeDialog('list-pembiayaan')"></v-btn>
         </v-card-title>
@@ -54,7 +57,7 @@
       transition="dialog-transition">
       <v-card>
         <v-card-title primary-title>
-          Pencairan Pinjaman
+          Detail Dealer
           <v-spacer></v-spacer>
           <v-btn class="ms-auto" text="Close" @click="closeDialog('pencairan')"></v-btn>
         </v-card-title>
@@ -88,7 +91,7 @@
       transition="dialog-transition">
       <v-card>
         <v-card-title primary-title>
-          Pembiayaan Dealer Detail Unit
+          Detail Unit
           <v-spacer></v-spacer>
           <v-btn class="ms-auto" text="Close" @click="closeDialog('pembiayaan-dealer')"></v-btn>
         </v-card-title>
@@ -140,7 +143,7 @@
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
                   <v-file-input v-model="field.file" :label="field.keterangan" accept="image/*" :name="field.kode"
                     prepend-icon="mdi-image" @change="onImageChange(index)" outlined></v-file-input>
-                  <v-img v-if="field.src" :src="field.src" max-height="200" class="my-4"></v-img>
+                  <v-img v-if="field.src" :src="field.src" max-height="200" class="my-4" @click="deleteImage(field.kode, index)"></v-img>
                 </v-col>
                 <!-- <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
                   <v-file-input v-model="imageList[index].file" :label="imageList[index].keterangan" accept="image/*" :name="imageList[index].kode"
@@ -222,10 +225,29 @@ export default {
 
       try {
         // Fetch data dealer
-        const response = await fetch('http://localhost:8080/api/dealer')
-        const data = await response.json()
-        // console.log("Dealer Data: ", data)
-        dealerList.value = data
+        const response = await axios.post('http://localhost:8080/api/dealer', { query: "" })
+
+        dealerList.value = response.data
+      } catch (error) {
+        console.error('Gagal fetch data:', error)
+        dealerList.value = []
+      } finally {
+        loading.value = false
+      }
+    }
+
+    const dealerQuery = ref(null) // query search data dealer
+
+    // get data dealer berdasarkan inputan user
+    const dealerSearch = async () => {
+      // console.log("Dealer Search: " , dealerQuery.value)
+      try {
+        // Fetch data dealer
+        const response = await axios.post('http://localhost:8080/api/dealer', {
+          query: dealerQuery.value
+        })
+        // const data = await response.json()
+        dealerList.value = response.data
       } catch (error) {
         console.error('Gagal fetch data:', error)
         dealerList.value = []
@@ -249,12 +271,18 @@ export default {
         // TODO: notifikasi user jika tidak ada data pencairan
 
         if (response.data.length <= 0) {
+          dealerDialog.value = false
           Swal.fire({
             icon: 'error',
-            title: 'Tidak ada Data Pencairan!',
-            text: 'Dealer ini tidak ada data pencairan.',
+            title: 'No Data!',
+            text: 'Tidak ada data untuk record ini.',
             confirmButtonColor: '#d33',
             confirmButtonText: 'Tutup',
+            customClass: {
+              popup: 'swal-top-z'
+            }
+          }).then(()=>{
+            dealerDialog.value = true
           })
         } else {
           const result = response.data[0]; // TODO: pencairan dapat lebih dari satu, integrasi
@@ -308,9 +336,9 @@ export default {
         const images = await getImages(noRegFas.value)
 
         // input gambar ke preview image (kalau ada)
-        images.forEach(img=>{
-          dokimg.value.forEach(item=>{
-            if(item.kode === img.kode){
+        images.forEach(img => {
+          dokimg.value.forEach(item => {
+            if (item.kode === img.kode) {
               item.src = img.image
             }
           })
@@ -373,7 +401,7 @@ export default {
 
     // get data image
     const getImages = async (value) => {
-      
+
       // fetch data foto
       const resFoto = await axios.post('http://localhost:8080/api/images', {
         noregfas: value,
@@ -382,6 +410,23 @@ export default {
       // console.log("ResFoto Data: ", resFoto.data)
 
       return resFoto.data
+    }
+
+    // delete gambar
+    const deleteImage = async (value, index) => {
+      console.log("Delete Gambar Values: ", pencairanBody.value.nodealer, value)
+      try {
+        const res = await axios.post('http://localhost:8080/api/images/delete', {
+          nodealer: pencairanBody.value.nodealer,
+          kode: value
+        })
+
+        // delete src agar gambar tidak ditampilkan lagi
+        dokimg.value[index].src = null
+
+      } catch (error) {
+        console.log('Error, delete image failed: ', error)
+      }
     }
 
     // handler perubahan gambar upload pada form penginputan gambar
@@ -393,7 +438,7 @@ export default {
       dokimg.value[index].width = '200' // cari nanti!
 
       const file = dokimg.value[index].file;
-      if(file && file instanceof File){
+      if (file && file instanceof File) {
         const reader = new FileReader()
         reader.onload = e => {
           // // mencari panjang dan lebar dari gambar
@@ -404,7 +449,7 @@ export default {
           // }
           dokimg.value[index].src = e.target.result
           // simpan url gambar
-        } 
+        }
         reader.readAsDataURL(file)
       } else {
         dokimg.value[index].src = null
@@ -421,10 +466,10 @@ export default {
       dokimg.value[index].width = '200' // cari nanti!
 
       const file = dokimg.value[index].file;
-      if(file && file instanceof File){
-        
+      if (file && file instanceof File) {
+
         const reader = new FileReader()
-        
+
         reader.onload = e => {
           // 1 | simpan data gambar pada array imagelist
           imageList.value[index] = {
@@ -433,7 +478,7 @@ export default {
           // simpan juga di dokimg biar muncul
           dokimg.value[index].src = e.target.result
         }
-        
+
         reader.readAsDataURL(file)
       } else {
         imageList.value[index] = null
@@ -445,33 +490,34 @@ export default {
     // API update data pembiayaan
     async function updatePembiayaan() {
       try {
-        const response = await axios.post("http://localhost:8080/api/pembiayaan/updatevalue: ", 
-          {tgltrn: pembiayaanBody.value.tgltrn,
-          jnsproduk: pembiayaanBody.value.jnsproduk,
-          jnskend: pembiayaanBody.value.jnskend,
-          merkkend: pembiayaanBody.value.merkkend,
-          thnbuat: pembiayaanBody.value.thnbuat,
-          warna: pembiayaanBody.value.warna,
-          tipekend: pembiayaanBody.value.tipekend,
-          nopol: pembiayaanBody.value.nopol,
-          nobpkb: pembiayaanBody.value.nobpkb,
-          odometer: pembiayaanBody.value.odometer,
-          konkend: pembiayaanBody.value.konkend,
-          nlpasar: pembiayaanBody.value.nlpasar,
-          nominal: pembiayaanBody.value.nominal,
-          persen: pembiayaanBody.value.persen,
-          bpkbflg: pembiayaanBody.value.bpkbflg,
-          faktura: pembiayaanBody.value.faktura,
-          ktpflg: pembiayaanBody.value.ktpflg,
-          nikflg: pembiayaanBody.value.nikflg,
-          stnkflg: pembiayaanBody.value.stnkflg,
-          kwitansiflg: pembiayaanBody.value.kwitansiflg,
-          nokanosin: pembiayaanBody.value.nokanosin,
-          sphflg: pembiayaanBody.value.sphflg,
-          kwjbflg: pembiayaanBody.value.kwjbflg,
-          fakturc: pembiayaanBody.value.fakturc,
-        }
-         );
+        const response = await axios.post("http://localhost:8080/api/pembiayaan/updatevalue: ",
+          {
+            tgltrn: pembiayaanBody.value.tgltrn,
+            jnsproduk: pembiayaanBody.value.jnsproduk,
+            jnskend: pembiayaanBody.value.jnskend,
+            merkkend: pembiayaanBody.value.merkkend,
+            thnbuat: pembiayaanBody.value.thnbuat,
+            warna: pembiayaanBody.value.warna,
+            tipekend: pembiayaanBody.value.tipekend,
+            nopol: pembiayaanBody.value.nopol,
+            nobpkb: pembiayaanBody.value.nobpkb,
+            odometer: pembiayaanBody.value.odometer,
+            konkend: pembiayaanBody.value.konkend,
+            nlpasar: pembiayaanBody.value.nlpasar,
+            nominal: pembiayaanBody.value.nominal,
+            persen: pembiayaanBody.value.persen,
+            bpkbflg: pembiayaanBody.value.bpkbflg,
+            faktura: pembiayaanBody.value.faktura,
+            ktpflg: pembiayaanBody.value.ktpflg,
+            nikflg: pembiayaanBody.value.nikflg,
+            stnkflg: pembiayaanBody.value.stnkflg,
+            kwitansiflg: pembiayaanBody.value.kwitansiflg,
+            nokanosin: pembiayaanBody.value.nokanosin,
+            sphflg: pembiayaanBody.value.sphflg,
+            kwjbflg: pembiayaanBody.value.kwjbflg,
+            fakturc: pembiayaanBody.value.fakturc,
+          }
+        );
       } catch (error) {
         console.error(error);
         alert("Gagal mengupdate data data pembiayaan");
@@ -517,7 +563,6 @@ export default {
       }
     }
 
-    // TODO: API Upload Image 2 (UPLOAD IMAGE DALAM BASE64)
     async function uploadImage2() {
       const formData = new FormData();
 
@@ -545,8 +590,8 @@ export default {
       // wrap JSON
       const payload = {
         images: images, // Array data gambar
-        nodealer: nodealer, 
-        noupencairan: noupencairan, 
+        nodealer: nodealer,
+        noupencairan: noupencairan,
         flag: flag
       }
 
@@ -604,10 +649,13 @@ export default {
       previewUrl,
       dokimg,
       getDealers,
+      dealerQuery,
+      dealerSearch,
       onRowClickPencairan,
       onRowClickPembiayaan,
       getPembiayaan,
       getImages,
+      deleteImage,
       closeDialog,
       onImageChange,
       onImageChange2,
@@ -618,3 +666,9 @@ export default {
   },
 }
 </script>
+
+<style>
+.swal-top-z {
+  z-index: 9999 !important;
+}
+</style>
