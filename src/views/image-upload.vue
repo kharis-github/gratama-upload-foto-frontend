@@ -1,6 +1,12 @@
 <template>
   <v-container>
-    <v-text-field label="Klik untuk Ambil Data" @click="getDealers" readonly></v-text-field>
+    <v-row justify="center">
+      <v-col>
+        <h1>Upload Image Untuk Pencairan</h1>
+      </v-col>
+    </v-row>
+    <!-- <v-text-field label="Pilih Dealer..." @click="getDealers" readonly></v-text-field> -->
+    <v-text-field label="Pilih Pembiayaan..." @click="getAllPembiayaan" readonly></v-text-field>
     <!-- 1 | Field Input Dealer -->
     <v-dialog v-model="dealerDialog" max-width="800px">
       <v-card>
@@ -27,23 +33,45 @@
       </v-card>
     </v-dialog>
 
-    <!-- list pembiayaan -->
+    <!-- LIST PEMBIAYAAN -->
 
-    <v-dialog v-model="dialogListPembiayaan" max-width="800px">
+    <v-dialog v-model="dialogListPembiayaan" max-width="1000px">
       <v-card>
         <v-card-title>
           List Pencairan
+          <v-spacer></v-spacer>
+          <v-row justify="center">
+            <v-col cols="12">
+              <v-autocomplete :items="cabangList" item-title="label" item-value="value" v-model="selectedCabang"
+                label="Daftar Cabang" @update:model-value="getAllPembiayaan"></v-autocomplete>
+            </v-col>
+          </v-row>
+          <!-- Search Field -->
+          <v-spacer></v-spacer>
+          <v-row justify="center">
+            <!-- Search Field Nama Dealer -->
+            <v-col>
+              <v-text-field v-model="nmDealerSearch" name="nmdealersearch" label="Search Nama Dealer"
+                prepend-inner-icon="mdi-magnify" id="nmdealersearch" @input="onPembiayaanSearchChange"></v-text-field>
+            </v-col>
+            <!-- Search Field Nomor Polisi -->
+            <v-col>
+              <v-text-field v-model="nopolSearch" name="nopolsearch" label="Search No. Polisi"
+                prepend-inner-icon="mdi-magnify" id="nopolsearch" @input="onPembiayaanSearchChange"></v-text-field>
+            </v-col>
+          </v-row>
           <v-spacer></v-spacer>
           <v-btn class="ms-auto" text="Close" @click="closeDialog('list-pembiayaan')"></v-btn>
         </v-card-title>
 
         <v-card-text>
-          <v-data-table :headers="pembiayaanHeaders" :items="listPembiayaan" :loading="loading"
+          <v-data-table :headers="pembiayaanHeaders" :items="listPembiayaanValues" :loading="loading"
             loading-text="Mengambil data..." class="elevation-1">
             <template #item="{ item }">
               <tr @click="onRowClickPembiayaan(item)" style="cursor: pointer;">
                 <td>{{ item.kode }}</td>
-                <td>{{ item.nmdebitur }}</td>
+                <td>{{ item.nopol }}</td>
+                <td>{{ item.nmdealer }}</td>
                 <td>{{ item.jnsproduk }}</td>
               </tr>
             </template>
@@ -141,9 +169,11 @@
             <v-form @submit.prevent="uploadImage">
               <v-row>
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
-                  <v-file-input v-model="field.file" :label="field.keterangan" accept="image/*" :name="field.kode"
-                    prepend-icon="mdi-image" @change="onImageChange(index)" outlined></v-file-input>
-                  <v-img v-if="field.src" :src="field.src" max-height="200" class="my-4" @click="deleteImage(field.kode, index)"></v-img>
+                  <v-file-input v-model="field.file" :label="field.flag === 'M' ? `${field.keterangan} (Wajib)` : field.keterangan" accept="image/*" :name="field.kode"
+                    prepend-icon="mdi-image" @change="onImageChange(index)" variant="outlined" :rules="field.flag === 'M' && !field.src ? [requiredRule] : []"></v-file-input>
+                  <ImageWithDelete v-if="field.src" :imageUrl="field.src" @delete="deleteImage(field.kode, index)" />
+                  <!-- <v-img v-if="field.src" :src="field.src" max-height="200" class="my-4"
+                    @click="deleteImage(field.kode, index)"></v-img> -->
                 </v-col>
                 <!-- <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
                   <v-file-input v-model="imageList[index].file" :label="imageList[index].keterangan" accept="image/*" :name="imageList[index].kode"
@@ -156,9 +186,9 @@
             </v-form>
           </v-container>
         </v-card-text>
-        <v-card-actions>
+        <!-- <v-card-actions>
           <v-btn color="secondary" @click="getPembiayaan">Show List</v-btn>
-        </v-card-actions>
+        </v-card-actions> -->
       </v-card>
     </v-dialog>
 
@@ -169,9 +199,13 @@
 import axios from 'axios'
 import { ref } from 'vue'
 import Swal from 'sweetalert2'
+import ImageWithDelete from '@/components/ImageWithDelete.vue'
 
 export default {
   name: 'ImageUpload',
+  components: {
+    ImageWithDelete // untuk penampilan gambar upload, yang dapat di hapus
+  },
   setup() {
     const noRegFas = ref(undefined) // nomor dealer
     const noU = ref(undefined) // nomor urut dealer
@@ -183,14 +217,16 @@ export default {
     const dialogListPembiayaan = ref(false) // dialog list pembiayaan
     const dialogPembiayaan = ref(false) // dialog pembiayaan
     const pembiayaanBody = ref({}) // body details pembiayaan
-    const listPembiayaan = ref([]) // list pembiayaan untuk pencairan yang sedang dipilih
+    const listPembiayaan = ref([]) // list pembiayaan API
+    const listPembiayaanValues = ref([]) // list pembiayaan yang ditampilkan di data table
     const headers = [
       { text: 'No.', value: 'noregfas' },
       { text: 'Nama', value: 'nama' },
     ]
     const pembiayaanHeaders = [
       { text: 'Kode', value: 'kode' },
-      { text: 'Debitur', value: 'nmdebitur' },
+      { text: 'No. Polisi', value: 'nopol' },
+      { text: 'Dealer', value: 'nmdealer' },
       { text: 'Jenis Produk', value: 'jnsproduk' },
     ]
     const imageFile = ref(null)
@@ -200,6 +236,10 @@ export default {
     const dokimg = ref([]) // daftar jenis dokumentasi image
     const message = ref('')
     const error = ref('')
+    const cabangList = ref([]) // daftar cabang
+    const selectedCabang = ref(null) // cabang yang dipilih dari daftar cabang
+    const nmDealerSearch = ref(null) // search query untuk list data pembiayaan
+    const nopolSearch = ref(null) // search query untuk list data pembiayaan
 
     // clear dialog
     const closeDialog = (form) => {
@@ -281,7 +321,7 @@ export default {
             customClass: {
               popup: 'swal-top-z'
             }
-          }).then(()=>{
+          }).then(() => {
             dealerDialog.value = true
           })
         } else {
@@ -314,9 +354,29 @@ export default {
       }
     }
 
-    const onRowClickPembiayaan = (item) => {
+    const onRowClickPembiayaan = async (item) => {
+      // ambil data gambar
+      // dokimg menentukan field gambar yang dapat diisi oleh user
+      await getDokumentasiImage()
+
+      const images = await getImages(item.nodealer, item.nou)
+
+      // input gambar ke preview image (kalau ada)
+      images.forEach(img => {
+        dokimg.value.forEach(item => {
+          if (item.kode === img.kode) {
+            item.src = img.image
+          }
+        })
+      })
+
       dialogPembiayaan.value = true
       pembiayaanBody.value = { ...item }
+      // nomor dealer dan nomor urut pencairan
+      pencairanBody.value = {
+        nodealer: item.nodealer,
+        nou: item.nou
+      }
       // console.log("Pembiayaan Body: ", pembiayaanBody.value)
     }
 
@@ -390,7 +450,138 @@ export default {
           "kwjbflg": item.KWJBFLG === '0' ? false : true
         }));
 
-        console.log("List Pembiayaan: ", listPembiayaan.value)
+        // // input data listpembiayaan ke list pembiayaan values
+        // listPembiayaanValues.value = listPembiayaan.value
+
+        // console.log("List Pembiayaan: ", listPembiayaan.value)
+
+      } catch (error) {
+        console.error('Gagal fetch data pembiayaan:', error)
+      } finally {
+        loading.value = false;
+      }
+    }
+
+    // get data cabang
+    const getCabang = async () => {
+      try {
+        // get data
+        const response = await axios.get('http://localhost:8080/api/cabang')
+
+        if (!response.data) {
+          console.log("Error! Data cabang gagal di-fetch")
+          return
+        }
+
+        cabangList.value = response.data.map((item) => ({
+          value: item.Kd_cabang,
+          label: item.NamaCabang,
+        }))
+      } catch (error) {
+
+      }
+    }
+
+    // get all data pembiayaan
+    const getAllPembiayaan = async () => {
+      try {
+        listPembiayaan.value = []
+
+        loading.value = true
+        dialogListPembiayaan.value = true
+
+        await getCabang()
+
+        // fetch data pembiayaan
+        const response = await axios.post('http://localhost:8080/api/pembiayaan/all', {
+          kdcab: selectedCabang.value, // kode cabang
+        })
+
+        // simpan daftar data pembiayaan di list
+        if (!response.data) throw new Error('Fetch data pembiayaan gagal!');
+
+        // simpan data ke list pembiayaan
+        listPembiayaan.value = response.data.map((item) => ({
+          'kode': item.KODE,
+          "nodealer": item.NODEALER,
+          "nmdealer": item.NMDEALER,
+          "nmdebitur": item.NMDEBITUR,
+          "nou": item.NOU,
+          "outstanding": item.OUTSTANDING,
+          "jthtempomou": item.JTHTEMPOMOU,
+          "plafond": item.PLAFOND,
+          "plfsisa": item.PLFSISA,
+          "baserate": item.BASERATE,
+          "marketing": item.MARKETING.length > 1 ? item.MARKETING[0] : item.MARKETING,
+          "tgltrn": item.TGLTRN,
+          "jnsproduk": item.JNSPRODUK,
+          "jnskend": item.JNSKEND,
+          "merkkend": item.MERKKEND,
+          "tipekend": item.TIPEKEND,
+          "warna": item.WARNA,
+          "thnbuat": item.THNBUAT,
+          "nopol": item.NOPOL,
+          "nobpkb": item.NOBPKB,
+          "odometer": item.ODOMETER,
+          "konkend": item.KONKEND,
+          "bpkbflg": item.BPKBFLG === '0' ? false : true,
+          "faktura": item.FAKTURA,
+          "fakturc": item.FAKTURC,
+          "ktpflg": item.KTPFLG === '0' ? false : true,
+          "nikflg": item.NIKFLG === '0' ? false : true,
+          "stnkflg": item.STNKFLG === '0' ? false : true,
+          "kwitansiflg": item.KWITANSIFLG === '0' ? false : true,
+          "nokanosin": item.NOKANOSIN,
+          "ketpbd": item.KETPBD,
+          "kodeao": item.KODEAO,
+          "nlpasar": item.NLPASAR,
+          "nominal": item.NOMINAL,
+          "persen": item.PERSEN,
+          "sphflg": item.SPHFLG === '0' ? false : true,
+          "kwjbflg": item.KWJBFLG === '0' ? false : true
+        }));
+
+        listPembiayaanValues.value = response.data.map((item) => ({
+          'kode': item.KODE,
+          "nodealer": item.NODEALER,
+          "nmdealer": item.NMDEALER,
+          "nmdebitur": item.NMDEBITUR,
+          "nou": item.NOU,
+          "outstanding": item.OUTSTANDING,
+          "jthtempomou": item.JTHTEMPOMOU,
+          "plafond": item.PLAFOND,
+          "plfsisa": item.PLFSISA,
+          "baserate": item.BASERATE,
+          "marketing": item.MARKETING.length > 1 ? item.MARKETING[0] : item.MARKETING,
+          "tgltrn": item.TGLTRN,
+          "jnsproduk": item.JNSPRODUK,
+          "jnskend": item.JNSKEND,
+          "merkkend": item.MERKKEND,
+          "tipekend": item.TIPEKEND,
+          "warna": item.WARNA,
+          "thnbuat": item.THNBUAT,
+          "nopol": item.NOPOL,
+          "nobpkb": item.NOBPKB,
+          "odometer": item.ODOMETER,
+          "konkend": item.KONKEND,
+          "bpkbflg": item.BPKBFLG === '0' ? false : true,
+          "faktura": item.FAKTURA,
+          "fakturc": item.FAKTURC,
+          "ktpflg": item.KTPFLG === '0' ? false : true,
+          "nikflg": item.NIKFLG === '0' ? false : true,
+          "stnkflg": item.STNKFLG === '0' ? false : true,
+          "kwitansiflg": item.KWITANSIFLG === '0' ? false : true,
+          "nokanosin": item.NOKANOSIN,
+          "ketpbd": item.KETPBD,
+          "kodeao": item.KODEAO,
+          "nlpasar": item.NLPASAR,
+          "nominal": item.NOMINAL,
+          "persen": item.PERSEN,
+          "sphflg": item.SPHFLG === '0' ? false : true,
+          "kwjbflg": item.KWJBFLG === '0' ? false : true
+        }));
+
+        // console.log("List Pembiayaan: ", listPembiayaan.value)
 
       } catch (error) {
         console.error('Gagal fetch data pembiayaan:', error)
@@ -400,11 +591,12 @@ export default {
     }
 
     // get data image
-    const getImages = async (value) => {
+    const getImages = async (noregfas, noupencairan) => {
 
       // fetch data foto
       const resFoto = await axios.post('http://localhost:8080/api/images', {
-        noregfas: value,
+        noregfas: noregfas,
+        noupencairan: noupencairan,
       })
 
       // console.log("ResFoto Data: ", resFoto.data)
@@ -545,8 +737,8 @@ export default {
 
       // 3 | append data headers
       formData.append('nodealer', pencairanBody.value.nodealer) // nomor dealer
-      formData.append('noupencairan', pencairanBody.value.nou)
-      formData.append('nourut', pembiayaanBody.value.nou)
+      formData.append('noupencairan', pencairanBody.value.nou) // nomor urut pencairan
+      formData.append('nourut', pembiayaanBody.value.nou) // nomor urut gambar
       formData.append('flag', '1') // TODO: isi flag
       formData.append('kode', pembiayaanBody.value.kode) // kode pembiayaan
 
@@ -609,8 +801,6 @@ export default {
 
     // API daftar dokumentasi image
     async function getDokumentasiImage() {
-      dealerDialog.value = true
-      loading.value = true
 
       try {
         // Fetch data dealer
@@ -629,6 +819,27 @@ export default {
       }
     }
 
+    // TODO: mengubah data pembiayaan berdasarkan search query
+    function onPembiayaanSearchChange() {
+      // buat array of filter berdasarkan nilai yang ada
+      const filters = []
+      // filter nama dealer
+      if (nmDealerSearch.value) {
+        filters.push(item => item.nmdealer.toLowerCase().includes(nmDealerSearch.value.toLowerCase()))
+      }
+
+      // filter nomor polisi
+      if (nopolSearch.value) {
+        filters.push(item => item.nopol.toLowerCase().includes(nopolSearch.value.toLowerCase()))
+      }
+
+      // filter data pembiayaan
+      listPembiayaanValues.value = listPembiayaan.value.filter(user => filters.every(fn => fn(user)))
+      // console.log("Filtered Values: ", filteredPembiayaan)
+    }
+
+    const requiredRule = v => !!v || 'Field ini wajib diisi!'
+
     return {
       noRegFas,
       noU,
@@ -641,6 +852,7 @@ export default {
       dialogPembiayaan,
       pembiayaanBody,
       listPembiayaan,
+      listPembiayaanValues,
       headers,
       pembiayaanHeaders,
       imageFile,
@@ -648,11 +860,16 @@ export default {
       base64Image,
       previewUrl,
       dokimg,
+      cabangList,
+      selectedCabang,
+      nmDealerSearch,
+      nopolSearch,
       getDealers,
       dealerQuery,
       dealerSearch,
       onRowClickPencairan,
       onRowClickPembiayaan,
+      getAllPembiayaan,
       getPembiayaan,
       getImages,
       deleteImage,
@@ -661,7 +878,9 @@ export default {
       onImageChange2,
       updatePembiayaan,
       uploadImage,
-      getDokumentasiImage
+      getDokumentasiImage,
+      onPembiayaanSearchChange,
+      requiredRule
     }
   },
 }
