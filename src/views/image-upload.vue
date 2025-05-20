@@ -42,8 +42,13 @@
           <v-spacer></v-spacer>
           <v-row justify="center">
             <v-col cols="12">
+              <v-btn class="ms-auto" text="Close" @click="closeDialog('list-pembiayaan')"></v-btn>
+            </v-col>
+          </v-row>
+          <v-row justify="center">
+            <v-col cols="12">
               <v-autocomplete :items="cabangList" item-title="label" item-value="value" v-model="selectedCabang"
-                label="Daftar Cabang" @update:model-value="getAllPembiayaan"></v-autocomplete>
+                label="Daftar Cabang" @update:model-value="onPembiayaanParameterChange"></v-autocomplete>
             </v-col>
           </v-row>
           <!-- Search Field -->
@@ -52,16 +57,16 @@
             <!-- Search Field Nama Dealer -->
             <v-col>
               <v-text-field v-model="nmDealerSearch" name="nmdealersearch" label="Search Nama Dealer"
-                prepend-inner-icon="mdi-magnify" id="nmdealersearch" @input="onPembiayaanSearchChange"></v-text-field>
+                prepend-inner-icon="mdi-magnify" id="nmdealersearch"
+                @input="onPembiayaanParameterChange"></v-text-field>
             </v-col>
             <!-- Search Field Nomor Polisi -->
             <v-col>
               <v-text-field v-model="nopolSearch" name="nopolsearch" label="Search No. Polisi"
-                prepend-inner-icon="mdi-magnify" id="nopolsearch" @input="onPembiayaanSearchChange"></v-text-field>
+                prepend-inner-icon="mdi-magnify" id="nopolsearch" @input="onPembiayaanParameterChange"></v-text-field>
             </v-col>
           </v-row>
           <v-spacer></v-spacer>
-          <v-btn class="ms-auto" text="Close" @click="closeDialog('list-pembiayaan')"></v-btn>
         </v-card-title>
 
         <v-card-text>
@@ -169,8 +174,10 @@
             <v-form @submit.prevent="uploadImage">
               <v-row>
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
-                  <v-file-input v-model="field.file" :label="field.flag === 'M' ? `${field.keterangan} (Wajib)` : field.keterangan" accept="image/*" :name="field.kode"
-                    prepend-icon="mdi-image" @change="onImageChange(index)" variant="outlined" :rules="field.flag === 'M' && !field.src ? [requiredRule] : []"></v-file-input>
+                  <v-file-input v-model="field.file"
+                    :label="field.flag === 'M' ? `${field.keterangan} (Wajib)` : field.keterangan" accept="image/*"
+                    :name="field.kode" prepend-icon="mdi-image" @change="onImageChange(index)" variant="outlined"
+                    :rules="field.flag === 'M' && !field.src ? [requiredRule] : []"></v-file-input>
                   <ImageWithDelete v-if="field.src" :imageUrl="field.src" @delete="deleteImage(field.kode, index)" />
                   <!-- <v-img v-if="field.src" :src="field.src" max-height="200" class="my-4"
                     @click="deleteImage(field.kode, index)"></v-img> -->
@@ -503,6 +510,7 @@ export default {
         // simpan data ke list pembiayaan
         listPembiayaan.value = response.data.map((item) => ({
           'kode': item.KODE,
+          'kdcab': item.KDCAB,
           "nodealer": item.NODEALER,
           "nmdealer": item.NMDEALER,
           "nmdebitur": item.NMDEBITUR,
@@ -543,6 +551,7 @@ export default {
 
         listPembiayaanValues.value = response.data.map((item) => ({
           'kode': item.KODE,
+          'kdcab': item.KDCAB,
           "nodealer": item.NODEALER,
           "nmdealer": item.NMDEALER,
           "nmdebitur": item.NMDEBITUR,
@@ -581,7 +590,7 @@ export default {
           "kwjbflg": item.KWJBFLG === '0' ? false : true
         }));
 
-        // console.log("List Pembiayaan: ", listPembiayaan.value)
+        console.log("List Pembiayaan: ", listPembiayaan.value)
 
       } catch (error) {
         console.error('Gagal fetch data pembiayaan:', error)
@@ -820,9 +829,15 @@ export default {
     }
 
     // TODO: mengubah data pembiayaan berdasarkan search query
-    function onPembiayaanSearchChange() {
+    function onPembiayaanParameterChange() {
       // buat array of filter berdasarkan nilai yang ada
       const filters = []
+
+      // filter daftar cabang
+      if (selectedCabang.value) {
+        filters.push(item => item.kdcab === selectedCabang.value)
+      }
+
       // filter nama dealer
       if (nmDealerSearch.value) {
         filters.push(item => item.nmdealer.toLowerCase().includes(nmDealerSearch.value.toLowerCase()))
@@ -879,7 +894,7 @@ export default {
       updatePembiayaan,
       uploadImage,
       getDokumentasiImage,
-      onPembiayaanSearchChange,
+      onPembiayaanParameterChange,
       requiredRule
     }
   },
