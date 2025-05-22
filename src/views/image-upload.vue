@@ -1,12 +1,18 @@
 <template>
   <v-container>
-    <v-row justify="center">
-      <v-col>
-        <h1>Upload Image Untuk Pencairan</h1>
-      </v-col>
-    </v-row>
+    <v-container grid-list-md justify="center">
+      <v-card elevation="4" outlined shaped max-width="50rem" class="mx-auto" style="margin-top: 10%;">
+        <v-card-title primary-title>
+          <b>Upload Image Untuk Pencairan</b>
+        </v-card-title>
+        <v-card-text>
+          <v-text-field label="Pilih Pembiayaan..." @click="getAllPembiayaan" readonly></v-text-field>
+        </v-card-text>
+      </v-card>
+    </v-container>
+
     <!-- <v-text-field label="Pilih Dealer..." @click="getDealers" readonly></v-text-field> -->
-    <v-text-field label="Pilih Pembiayaan..." @click="getAllPembiayaan" readonly></v-text-field>
+
     <!-- 1 | Field Input Dealer -->
     <v-dialog v-model="dealerDialog" max-width="800px">
       <v-card>
@@ -499,16 +505,19 @@ export default {
 
         await getCabang()
 
+        // get data kdcab user login
+        const user = JSON.parse(localStorage.getItem('user'))
+
         // fetch data pembiayaan
         const response = await axios.post('http://localhost:8080/api/pembiayaan/all', {
-          kdcab: selectedCabang.value, // kode cabang
+          kdcab: user.kdcab
         })
 
         // simpan daftar data pembiayaan di list
-        if (!response.data) throw new Error('Fetch data pembiayaan gagal!');
+        if (!response.data) throw new Error('No data found!');
 
         // simpan data ke list pembiayaan
-        listPembiayaan.value = response.data.map((item) => ({
+        const resData = response.data.map((item) => ({
           'kode': item.KODE,
           'kdcab': item.KDCAB,
           "nodealer": item.NODEALER,
@@ -549,46 +558,8 @@ export default {
           "kwjbflg": item.KWJBFLG === '0' ? false : true
         }));
 
-        listPembiayaanValues.value = response.data.map((item) => ({
-          'kode': item.KODE,
-          'kdcab': item.KDCAB,
-          "nodealer": item.NODEALER,
-          "nmdealer": item.NMDEALER,
-          "nmdebitur": item.NMDEBITUR,
-          "nou": item.NOU,
-          "outstanding": item.OUTSTANDING,
-          "jthtempomou": item.JTHTEMPOMOU,
-          "plafond": item.PLAFOND,
-          "plfsisa": item.PLFSISA,
-          "baserate": item.BASERATE,
-          "marketing": item.MARKETING.length > 1 ? item.MARKETING[0] : item.MARKETING,
-          "tgltrn": item.TGLTRN,
-          "jnsproduk": item.JNSPRODUK,
-          "jnskend": item.JNSKEND,
-          "merkkend": item.MERKKEND,
-          "tipekend": item.TIPEKEND,
-          "warna": item.WARNA,
-          "thnbuat": item.THNBUAT,
-          "nopol": item.NOPOL,
-          "nobpkb": item.NOBPKB,
-          "odometer": item.ODOMETER,
-          "konkend": item.KONKEND,
-          "bpkbflg": item.BPKBFLG === '0' ? false : true,
-          "faktura": item.FAKTURA,
-          "fakturc": item.FAKTURC,
-          "ktpflg": item.KTPFLG === '0' ? false : true,
-          "nikflg": item.NIKFLG === '0' ? false : true,
-          "stnkflg": item.STNKFLG === '0' ? false : true,
-          "kwitansiflg": item.KWITANSIFLG === '0' ? false : true,
-          "nokanosin": item.NOKANOSIN,
-          "ketpbd": item.KETPBD,
-          "kodeao": item.KODEAO,
-          "nlpasar": item.NLPASAR,
-          "nominal": item.NOMINAL,
-          "persen": item.PERSEN,
-          "sphflg": item.SPHFLG === '0' ? false : true,
-          "kwjbflg": item.KWJBFLG === '0' ? false : true
-        }));
+        listPembiayaan.value = resData
+        listPembiayaanValues.value = resData
 
         console.log("List Pembiayaan: ", listPembiayaan.value)
 
