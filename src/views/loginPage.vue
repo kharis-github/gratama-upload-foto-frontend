@@ -24,6 +24,8 @@ import router from '@/router';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { ref } from 'vue';
+import { logout } from '@/helpers/helpers';
+import { getTokenExpiration } from '@/helpers/helpers';
 
 export default {
     name: 'LoginPage',
@@ -51,29 +53,49 @@ export default {
                         router.push('/')
                     });
 
-                    // insert token dan data persistent
-                    localStorage.setItem('token', response.data.token)
-                    localStorage.setItem('user', JSON.stringify(response.data.user))
+                    const token = response.data.token // data token
+                    const user = response.data.user // data user
 
-                    // TEST
-                    console.log("Token: ", localStorage.getItem('token'))
+                    // insert token dan data persistent
+                    localStorage.setItem('token', token)
+                    localStorage.setItem('user', JSON.stringify(user))
+
+                    setAutoLogout(token) // setting auto logout expiration token
                 }
 
             } catch (error) {
                 console.log("Authentication Error: ", error)
                 Swal.fire({
                     icon: "error",
-                    title: "Autentikasi Gagal!",
+                    title: "Login Gagal!",
                     text: error.response?.data?.message,
                     // footer: '<a href="#">Why do I have this issue?</a>'
                 });
             }
         }
 
+        // setting timer logout otomatis berdasarkan batas waktu token
+        const setAutoLogout = (token) => {
+            const expTime = getTokenExpiration(token);
+            const now = Date.now();
+            const timeout = expTime - now;
+
+            if (timeout > 0) {
+                setTimeout(() => {
+                    logout();
+                }, timeout);
+            } else {
+                logout(); // token sudah expired
+            }
+        }
+
+
         return {
             userid,
             password,
             submitLogin,
+            setAutoLogout,
+            getTokenExpiration
         }
     }
 }

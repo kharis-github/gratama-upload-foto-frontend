@@ -3,17 +3,55 @@
     <v-container grid-list-md justify="center">
       <v-card elevation="4" outlined shaped max-width="50rem" class="mx-auto" style="margin-top: 10%;">
         <v-card-title primary-title>
-          <b>Upload Image Untuk Pencairan</b>
+          <b>Gratama Upload Image Desktop</b>
         </v-card-title>
         <v-card-text>
-          <v-text-field label="Pilih Pembiayaan..." @click="getAllPembiayaan" readonly></v-text-field>
+          <v-container grid-list-md>
+            <!-- Pembiayaan Dealer -->
+            <v-row>
+              <v-col>
+                <v-btn color="info" @click="logout">Logout</v-btn>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <MenuButton icon="mdi-note-edit" buttonText="Pembiayaan Dealer"
+                  :onClick="() => { dialogPilihPembiayaan = true }" size="100" color="secondary" />
+              </v-col>
+              <v-col>
+                <MenuButton icon="mdi-check-circle-outline" buttonText="Perpanjangan RO"
+                  :onClick="openDialogPerpanjanganRO" size="100" color="warning" />
+              </v-col>
+            </v-row>
+          </v-container>
+
+          <!-- Perpanjangan RO -->
         </v-card-text>
       </v-card>
     </v-container>
 
     <!-- <v-text-field label="Pilih Dealer..." @click="getDealers" readonly></v-text-field> -->
 
-    <!-- 1 | Field Input Dealer -->
+    <!-- PILIH PEMBIAYAAN -->
+    <v-dialog v-model="dialogPilihPembiayaan" persistent :overlay="false" max-width="800px"
+      transition="dialog-transition">
+      <v-card>
+        <v-card-title primary-title>
+          Pilih Pembiayaan
+          <v-spacer></v-spacer>
+          <v-btn class="ms-auto" text="Close" @click="() => { dialogPilihPembiayaan = false }"></v-btn>
+          <v-card-text>
+            <v-row>
+              <v-col>
+                <v-text-field label="Pilih Pembiayaan..." @click="getAllPembiayaan" readonly></v-text-field>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card-title>
+      </v-card>
+    </v-dialog>
+
+    <!-- INPUT DEALER -->
     <v-dialog v-model="dealerDialog" max-width="800px">
       <v-card>
         <v-card-title>
@@ -23,7 +61,6 @@
         </v-card-title>
 
         <v-card-text>
-          <!-- TODO: Search data dealer -->
           <v-text-field v-model="dealerQuery" name="search" label="Search..." prepend-inner-icon="mdi-magnify"
             id="dealersearch" clearable @input="dealerSearch"></v-text-field>
           <v-data-table :headers="headers" :items="dealerList" :loading="loading" loading-text="Mengambil data..."
@@ -177,14 +214,134 @@
 
           </v-form>
           <v-container grid-list-md>
-            <v-form @submit.prevent="uploadImage">
+            <v-form @submit.prevent="uploadImage('1')">
               <v-row>
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
                   <v-file-input v-model="field.file"
                     :label="field.flag === 'M' ? `${field.keterangan} (Wajib)` : field.keterangan" accept="image/*"
                     :name="field.kode" prepend-icon="mdi-image" @change="onImageChange(index)" variant="outlined"
                     :rules="field.flag === 'M' && !field.src ? [requiredRule] : []"></v-file-input>
-                  <ImageWithDelete v-if="field.src" :imageUrl="field.src" @delete="deleteImage(field.kode, index)" />
+                  <ImageWithDelete v-if="field.src" :imageUrl="field.src"
+                    @delete="deleteImage(field.kode, index, pencairanBody.nodealer, pencairanBody.nou, null, null, '1')" />
+                  <!-- <v-img v-if="field.src" :src="field.src" max-height="200" class="my-4"
+                    @click="deleteImage(field.kode, index)"></v-img> -->
+                </v-col>
+                <!-- <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
+                  <v-file-input v-model="imageList[index].file" :label="imageList[index].keterangan" accept="image/*" :name="imageList[index].kode"
+                    prepend-icon="mdi-image" @change="onImageChange2(index)" outlined></v-file-input>
+                  <v-img v-if="imageList[index].src" :src="imageList[index].src" max-height="200" class="my-4"></v-img>
+                </v-col> -->
+              </v-row>
+              <v-btn color="primary" type="submit">Upload Foto</v-btn>
+            </v-form>
+          </v-container>
+        </v-card-text>
+        <!-- <v-card-actions>
+          <v-btn color="secondary" @click="getPembiayaan">Show List</v-btn>
+        </v-card-actions> -->
+      </v-card>
+    </v-dialog>
+
+    <!-- MENU PERPANJANGAN RO -->
+    <v-dialog v-model="dialogPerpanjanganRO" scrollable persistent :overlay="false" max-width="800"
+      transition="dialog-transition">
+      <v-card>
+        <v-card-title primary-title>
+          Perpanjangan RO
+          <v-spacer></v-spacer>
+          <v-btn class="ms-auto" text="Close" @click="closeDialog('perpanjangan-ro')"></v-btn>
+        </v-card-title>
+        <v-card-text>
+          <v-form>
+            <v-autocomplete :items="dealerList" item-title="nama" item-value="noregfas" v-model="selectedDealer"
+              label="Nama Dealer" return-object @update:model-value="async (item) => {
+                const { noregfas } = item
+                await getNopols(noregfas) // get data nomor polisi
+                isNopolDisabled = false // activate field nopol
+                selectedNopol = null // hapus pilihan nopol
+                selectedRO = null // kosongkan RO
+              }"></v-autocomplete>
+            <v-autocomplete :items="nopolList" item-title="nopol" item-value="nopol" v-model="selectedNopol"
+              label="No. Polisi" :disabled="isNopolDisabled" return-object @update:model-value="async (item) => {
+                // console.log(item)
+                const { nodealer, nofas } = item
+                await getRO(nodealer, nofas) // get data RO
+                isRODisabled = false // disable RO
+                selectedRO = null // kosongkan RO
+              }">
+              <!-- <template #item="{ item, props }">
+                <v-list-item v-bind="props">
+                  <v-list-item-title>
+                    {{ item.nofas }} - {{ item.nopol }}
+                  </v-list-item-title>
+                </v-list-item>
+              </template>
+              <template #selection="{ item, index }">
+                <span>{{ item.nofas }} - {{ item.nopol }}</span>
+              </template> -->
+            </v-autocomplete>
+            <v-autocomplete :items="roList" item-title="roke" item-value="roke" v-model="selectedRO" label="RO Ke"
+              :disabled="isRODisabled" @update:model-value="() => { return }"></v-autocomplete>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="secondary" @click="async () => {
+            await getOdometer(selectedDealer.noregfas, selectedNopol.nofas, selectedRO) // simpan data berkaitan odometer
+            dialogOdometer = true // buka dialog details odometer
+          }">Check</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- ODOMETER DETAILS -->
+    <v-dialog v-model="dialogOdometer" scrollable persistent :overlay="false" max-width="800"
+      transition="dialog-transition">
+      <v-card>
+        <v-card-title primary-title>
+          Odometer Details
+          <v-spacer></v-spacer>
+          <v-btn class="ms-auto" text="Close" @click="closeDialog('odometer-details')"></v-btn>
+        </v-card-title>
+        <v-card-text>
+          <v-form>
+            <v-text-field name="nodealer" label="No. Dealer" id="nodealer"
+              v-model="odometerBody.nodealer"></v-text-field>
+            <v-text-field name="namadealer" label="Nama Dealer" id="namadealer"
+              v-model="odometerBody.nmdealer"></v-text-field>
+            <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="odometerBody.nopol"></v-text-field>
+            <v-text-field name="odolama" label="Odometer RO Sebelum" id="odolama"
+              v-model="odometerBody.odolama"></v-text-field>
+            <v-text-field name="odometer" label="Odometer RO Sekarang" id="odometer"
+              v-model="odometerBody.odometer"></v-text-field>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="secondary" @click="onClickPerpanjanganNext">Next</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- DIALOG UPLOAD FOTO UNTUK PERPANJANGAN RO -->
+    <v-dialog v-model="dialogUploadPerpanjanganRO" scrollable persistent :overlay="false" max-width="800"
+      transition="dialog-transition">
+      <v-card>
+        <v-card-title primary-title>
+          Perpanjangan RO
+          <v-spacer></v-spacer>
+          <v-btn class="ms-auto" text="Close" @click="closeDialog('upload-perpanjangan-ro')"></v-btn>
+        </v-card-title>
+
+        <v-card-text>
+          <v-container grid-list-md>
+            <v-form @submit.prevent="uploadImage('2')">
+              <v-row>
+                <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
+                  <v-file-input v-model="field.file"
+                    :label="field.flag === 'M' ? `${field.keterangan} (Wajib)` : field.keterangan" accept="image/*"
+                    :name="field.kode" prepend-icon="mdi-image" @change="onImageChange(index)" variant="outlined"
+                    :rules="field.flag === 'M' && !field.src ? [requiredRule] : []"></v-file-input>
+                  <ImageWithDelete v-if="field.src" :imageUrl="field.src"
+                    @delete="deleteImage(field.kode, index, null, null, selectedNopol.nofas, selectedRO, '2')" />
                   <!-- <v-img v-if="field.src" :src="field.src" max-height="200" class="my-4"
                     @click="deleteImage(field.kode, index)"></v-img> -->
                 </v-col>
@@ -205,6 +362,7 @@
       </v-card>
     </v-dialog>
 
+
   </v-container>
 </template>
 
@@ -213,11 +371,15 @@ import axios from 'axios'
 import { ref } from 'vue'
 import Swal from 'sweetalert2'
 import ImageWithDelete from '@/components/ImageWithDelete.vue'
+import MenuButton from '@/components/MenuButton.vue'
+import router from '@/router'
+import { logout } from '@/helpers/helpers'
 
 export default {
   name: 'ImageUpload',
   components: {
-    ImageWithDelete // untuk penampilan gambar upload, yang dapat di hapus
+    MenuButton, // tombol pada menu
+    ImageWithDelete, // untuk penampilan gambar upload, yang dapat di hapus,
   },
   setup() {
     const noRegFas = ref(undefined) // nomor dealer
@@ -227,8 +389,18 @@ export default {
     const pencairanBody = ref({})
     const loading = ref(false)
     const dealerList = ref([]) // data dealer
+    const nopolList = ref([]) // data nomor polisi
+    const roList = ref([]) // daftar RO
+    const odometerBody = ref(null) // odometer
+    const selectedDealer = ref(null) // dealer yang dipilih untuk perpanjangan RO
+    const selectedNopol = ref(null) // nomor polisi yang dipilih untuk perpanjangan RO
+    const selectedRO = ref(null) // RO yg dipilih untuk perpanjangan RO
     const dialogListPembiayaan = ref(false) // dialog list pembiayaan
     const dialogPembiayaan = ref(false) // dialog pembiayaan
+    const dialogPilihPembiayaan = ref(false) // dialog pilih pembiayaan
+    const dialogPerpanjanganRO = ref(false) // dialog pilih perpanjangan RO
+    const dialogOdometer = ref(false) // dialog details odometer
+    const dialogUploadPerpanjanganRO = ref(false) // dialog untuk mengupload foto untuk perpanjangan RO
     const pembiayaanBody = ref({}) // body details pembiayaan
     const listPembiayaan = ref([]) // list pembiayaan API
     const listPembiayaanValues = ref([]) // list pembiayaan yang ditampilkan di data table
@@ -253,6 +425,8 @@ export default {
     const selectedCabang = ref(null) // cabang yang dipilih dari daftar cabang
     const nmDealerSearch = ref(null) // search query untuk list data pembiayaan
     const nopolSearch = ref(null) // search query untuk list data pembiayaan
+    const isNopolDisabled = ref(true) // disable nopol kecuali user sudah memilih data dealer
+    const isRODisabled = ref(true) // disable RO kecuali user sudah memilih data RO
 
     // clear dialog
     const closeDialog = (form) => {
@@ -268,17 +442,27 @@ export default {
       } else if (form === 'pembiayaan-dealer') {
         dialogPembiayaan.value = false
         pembiayaanBody.value = {}
+      } else if (form === 'perpanjangan-ro') {
+        dialogPerpanjanganRO.value = false // hapus dialog
+        selectedNopol.value = null // hilangkan pilihan nopol
+      } else if (form === 'odometer-details') {
+        dialogOdometer.value = false // hapus dialog odometer details
+      } else if (form === 'upload-perpanjangan-ro') {
+        dialogUploadPerpanjanganRO.value = false // tutup dialog upload image utk perpanjangan ro
       }
     }
 
-    // load data dealer
-    const getDealers = async () => {
-      dealerDialog.value = true
-      loading.value = true
+    // fetch data dealer
+    const getDealers = async (nama = null, kdcab = null) => {
+      // dealerDialog.value = true
+      // loading.value = true
 
       try {
         // Fetch data dealer
-        const response = await axios.post('http://localhost:8080/api/dealer', { query: "" })
+        const response = await axios.post('http://localhost:8080/api/dealer', {
+          nama,
+          kdcab,
+        })
 
         dealerList.value = response.data
       } catch (error) {
@@ -287,6 +471,70 @@ export default {
       } finally {
         loading.value = false
       }
+    }
+
+    // fetch data nomor polisi
+    const getNopols = async (noregfas = null) => {
+      try {
+        // Fetch data dealer
+        const response = await axios.post('http://localhost:8080/api/nopol', {
+          noregfas,
+        })
+
+        nopolList.value = response.data
+      } catch (error) {
+        console.error('Gagal fetch data nopol:', error)
+        nopolList.value = []
+      } finally {
+        loading.value = false
+      }
+    }
+
+    // ambil data RO
+    const getRO = async (noregfas = null, nofas = null, angsurke = null) => {
+      try {
+        // Fetch data dealer
+        // console.log("Noregfas: ", noregfas)
+        // console.log("Nofas: ", nofas)
+        const response = await axios.post('http://localhost:8080/api/ro', {
+          noregfas,
+          nofas,
+          angsurke,
+        })
+
+        roList.value = response.data
+      } catch (error) {
+        console.error('Gagal fetch data RO:', error)
+        roList.value = []
+      } finally {
+        loading.value = false
+      }
+    }
+
+    // fetch data odometer
+    const getOdometer = async (nodealer = null, nofas = null, roke = null) => {
+      // console.log(nodealer)
+      // console.log(nofas)
+      // console.log(roke)
+
+      try {
+        const response = await axios.post('http://localhost:8080/api/odometer', {
+          nodealer, // dealer
+          nofas,
+          roke, // angsuran
+        })
+
+        odometerBody.value = response.data[0]
+
+        console.log("Response Data: ", response.data[0])
+
+      } catch (error) {
+        console.error('Gagal fetch data odometer:', error)
+        odometerBody.value = null
+      } finally {
+        loading.value = false
+      }
+
     }
 
     const dealerQuery = ref(null) // query search data dealer
@@ -370,9 +618,9 @@ export default {
     const onRowClickPembiayaan = async (item) => {
       // ambil data gambar
       // dokimg menentukan field gambar yang dapat diisi oleh user
-      await getDokumentasiImage()
+      await getDokumentasiImage('P')
 
-      const images = await getImages(item.nodealer, item.nou)
+      const images = await getImages(item.nodealer, item.nou, null, null, '1')
 
       // input gambar ke preview image (kalau ada)
       images.forEach(img => {
@@ -404,7 +652,7 @@ export default {
         })
 
         // dokimg menentukan field gambar yang dapat diisi oleh user
-        await getDokumentasiImage()
+        await getDokumentasiImage('P')
 
         const images = await getImages(noRegFas.value)
 
@@ -571,12 +819,15 @@ export default {
     }
 
     // get data image
-    const getImages = async (noregfas, noupencairan) => {
+    const getImages = async (noregfas = null, noupencairan = null, nofas = null, roke = null, type = '1') => {
 
       // fetch data foto
       const resFoto = await axios.post('http://localhost:8080/api/images', {
-        noregfas: noregfas,
-        noupencairan: noupencairan,
+        noregfas,
+        noupencairan,
+        nofas,
+        roke,
+        type,
       })
 
       // console.log("ResFoto Data: ", resFoto.data)
@@ -585,12 +836,15 @@ export default {
     }
 
     // delete gambar
-    const deleteImage = async (value, index) => {
-      console.log("Delete Gambar Values: ", pencairanBody.value.nodealer, value)
+    const deleteImage = async (kode, index, nodealer = null, noupencairan = null, nofas = null, roke = null, type = '1') => {
       try {
         const res = await axios.post('http://localhost:8080/api/images/delete', {
-          nodealer: pencairanBody.value.nodealer,
-          kode: value
+          nodealer,
+          noupencairan,
+          nofas,
+          roke,
+          kode,
+          type
         })
 
         // delete src agar gambar tidak ditampilkan lagi
@@ -697,32 +951,51 @@ export default {
     }
 
     // API upload image
-    async function uploadImage() {
+    async function uploadImage(type = '1') {
       const formData = new FormData();
+      // type menentukan jenis flow upload image antara pembiayaan atau perpanjangan RO
 
       // append data gambar dan header-header yang berkaitan (height, width, kode)
+
       // 1 | filter field-field gambar yang mengalami perubahan
       const imgList = dokimg.value.filter((x) => x.file)
 
-      console.log("Daftar Gambar utk Upload: ", imgList)
+      // 2 | cegah user untuk mengupload image jika ada field wajib yang belum terisi
+      // console.log("Image List: ", dokimg.value)
+      var validation = false
+      dokimg.value.forEach((element, index) => {
+        if (!element.src && element.flag === 'M') {
+          validation = true
+        }
+      });
+      if (validation) {
+        alert('Field wajib belum semua terisi!')
+        return
+      }
 
-      // 2 | append metadata gambar
+      // 3 | append metadata gambar
       imgList.forEach(field => {
         // formData.append('kode', field.kode) // kode
-        formData.append(`${field.kode}`, field.file) // file gambar
-        formData.append(`src-${field.kode}`, field.src) // file gambar SEJATI (Base64)
+        formData.append(`${field.kode}`, field.file) // file gambar BLOB
+        formData.append(`src-${field.kode}`, field.src) // file gambar base64
         formData.append(`height-${field.kode}`, field.height) // tinggi
         formData.append(`width-${field.kode}`, field.width) // lebar
       });
 
-      // 3 | append data headers
-      formData.append('nodealer', pencairanBody.value.nodealer) // nomor dealer
-      formData.append('noupencairan', pencairanBody.value.nou) // nomor urut pencairan
+      // 4 | append data headers
+      if (type === '1') {
+        formData.append('nodealer', pencairanBody.value.nodealer) // nomor dealer
+        formData.append('noupencairan', pencairanBody.value.nou) // nomor urut pencairan
+      } else {
+        formData.append('nofas', selectedNopol.value.nofas) // nofas
+        formData.append('roke', selectedRO.value) // roke
+      }
       formData.append('nourut', pembiayaanBody.value.nou) // nomor urut gambar
       formData.append('flag', '1') // TODO: isi flag
       formData.append('kode', pembiayaanBody.value.kode) // kode pembiayaan
+      formData.append('type', type) // tipe
 
-      // 4 | request http
+      // 5 | request http
       try {
         const response = await axios.post("http://localhost:8080/api/uploadbulk", formData, {
           "Content-Type": "multipart/form-data",
@@ -779,13 +1052,31 @@ export default {
       }
     }
 
+    async function onClickPerpanjanganNext() {
+      await getDokumentasiImage('R') // ambil daftar dokumentasi image bertipe 'R'
+      const images = await getImages(null, null, selectedNopol.value.nofas, selectedRO.value, '2')
+
+      console.log("images: ", images)
+
+      // input gambar ke preview image (kalau ada)
+      images.forEach(img => {
+        dokimg.value.forEach(item => {
+          if (item.kode === img.kode) {
+            item.src = img.image
+          }
+        })
+      })
+
+      dialogUploadPerpanjanganRO.value = true // buka dialog upload foto untuk perpanjangan RO
+    }
+
     // API daftar dokumentasi image
-    async function getDokumentasiImage() {
+    async function getDokumentasiImage(tipe = 'P') {
 
       try {
         // Fetch data dealer
         const response = await axios.post('http://localhost:8080/api/dokimg', {
-          tipe: 'P', // data P: pencairan
+          tipe,
         })
 
         dokimg.value = response.data
@@ -824,6 +1115,19 @@ export default {
       // console.log("Filtered Values: ", filteredPembiayaan)
     }
 
+    async function openDialogPerpanjanganRO() {
+      // console.log("SAYA DIKLIK")
+      // open dialog
+      dialogPerpanjanganRO.value = true
+
+      // use token
+      const user = JSON.parse(localStorage.getItem('user'))
+
+      // get data dealer
+      await getDealers(null, user.kdcab)
+
+    }
+
     const requiredRule = v => !!v || 'Field ini wajib diisi!'
 
     return {
@@ -834,8 +1138,20 @@ export default {
       pencairanBody,
       loading,
       dealerList,
+      nopolList,
+      roList,
+      odometerBody,
+      selectedDealer,
+      selectedNopol,
+      selectedRO,
       dialogListPembiayaan,
       dialogPembiayaan,
+      dialogPilihPembiayaan,
+      dialogPerpanjanganRO,
+      dialogUploadPerpanjanganRO,
+      dialogOdometer,
+      openDialogPerpanjanganRO,
+      logout,
       pembiayaanBody,
       listPembiayaan,
       listPembiayaanValues,
@@ -850,7 +1166,12 @@ export default {
       selectedCabang,
       nmDealerSearch,
       nopolSearch,
+      isNopolDisabled,
+      isRODisabled,
       getDealers,
+      getNopols,
+      getRO,
+      getOdometer,
       dealerQuery,
       dealerSearch,
       onRowClickPencairan,
@@ -864,6 +1185,7 @@ export default {
       onImageChange2,
       updatePembiayaan,
       uploadImage,
+      onClickPerpanjanganNext,
       getDokumentasiImage,
       onPembiayaanParameterChange,
       requiredRule

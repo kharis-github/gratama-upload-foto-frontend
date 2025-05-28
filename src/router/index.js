@@ -37,6 +37,7 @@ router.beforeEach((to, from, next) => {
 
   // 2 | autentikasi token
   if (to.meta.requiresAuth && !token) {
+    alert('User harus login terlebih dahulu!')
     next('/login') // jika user blm login, harus login
   } else {
     next()
