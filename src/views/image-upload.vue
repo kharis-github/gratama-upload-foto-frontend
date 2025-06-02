@@ -620,16 +620,7 @@ export default {
       // dokimg menentukan field gambar yang dapat diisi oleh user
       await getDokumentasiImage('P')
 
-      const images = await getImages(item.nodealer, item.nou, null, null, '1')
-
-      // input gambar ke preview image (kalau ada)
-      images.forEach(img => {
-        dokimg.value.forEach(item => {
-          if (item.kode === img.kode) {
-            item.src = img.image
-          }
-        })
-      })
+      await getImages(item.nodealer, item.nou, null, null, '1')
 
       dialogPembiayaan.value = true
       pembiayaanBody.value = { ...item }
@@ -654,18 +645,7 @@ export default {
         // dokimg menentukan field gambar yang dapat diisi oleh user
         await getDokumentasiImage('P')
 
-        const images = await getImages(noRegFas.value)
-
-        // input gambar ke preview image (kalau ada)
-        images.forEach(img => {
-          dokimg.value.forEach(item => {
-            if (item.kode === img.kode) {
-              item.src = img.image
-            }
-          })
-        })
-
-        console.log("Dok Image: ", dokimg.value)
+        await getImages(noRegFas.value) // ambil daftar gambar
 
         // simpan daftar data pembiayaan di list
         if (!response.data) throw new Error('Fetch data pembiayaan gagal!');
@@ -761,6 +741,9 @@ export default {
           kdcab: user.kdcab
         })
 
+        // set kd cabang user sebagai selectedCabang
+        selectedCabang.value = user.kdcab
+
         // simpan daftar data pembiayaan di list
         if (!response.data) throw new Error('No data found!');
 
@@ -830,7 +813,17 @@ export default {
         type,
       })
 
-      // console.log("ResFoto Data: ", resFoto.data)
+      // DEBUG: json response
+      console.log("Data Foto", resFoto)
+
+      // simpan data image di state dokimg, agar dapat di-preview
+      resFoto.data.forEach(img => {
+        dokimg.value.forEach(item => {
+          if (item.kode === img.kode) {
+            item.src = img.image
+          }
+        })
+      })
 
       return resFoto.data
     }
