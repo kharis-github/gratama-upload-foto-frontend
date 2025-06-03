@@ -141,20 +141,20 @@
         <v-card-text>
           <v-form>
             <v-text-field name="nodealer" label="No. Dealer" id="nodealer"
-              v-model="pencairanBody.nodealer"></v-text-field>
+              v-model="pencairanBody.nodealer" readonly></v-text-field>
             <v-text-field name="outstanding" label="Outstanding" id="outstanding"
-              v-model="pencairanBody.outstanding"></v-text-field>
+              v-model="pencairanBody.outstanding" readonly></v-text-field>
             <v-text-field name="nmdealer" label="Nama Dealer" id="nmdealer"
-              v-model="pencairanBody.nmdealer"></v-text-field>
+              v-model="pencairanBody.nmdealer" readonly></v-text-field>
             <v-text-field name="nmdebitur" label="Nama Pemilik" id="nmdebitur"
-              v-model="pencairanBody.nmdebitur"></v-text-field>
+              v-model="pencairanBody.nmdebitur" readonly></v-text-field>
             <v-text-field name="marketing" label="marketing" id="marketing"
-              v-model="pencairanBody.marketing"></v-text-field>
+              v-model="pencairanBody.marketing" readonly></v-text-field>
             <v-text-field name="jthtempomou" label="Jatuh Tempo MOU" id="jthtempomou"
-              v-model="pencairanBody.jthtempomou"></v-text-field>
-            <v-text-field name="plafond" label="Plafond" id="planfond" v-model="pencairanBody.plafond"></v-text-field>
+              v-model="pencairanBody.jthtempomou" readonly></v-text-field>
+            <v-text-field name="plafond" label="Plafond" id="planfond" v-model="pencairanBody.plafond" readonly></v-text-field>
             <v-text-field name="plfsisa" label="Plafond Sisa" id="plfsisa"
-              v-model="pencairanBody.plfsisa"></v-text-field>
+              v-model="pencairanBody.plfsisa" readonly></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -180,112 +180,112 @@
             <v-row>
               <v-col>
                 <v-text-field name="tgltrn" label="Tanggal Pencairan" id="tgltrn"
-                  v-model="pembiayaanBody.tgltrn"></v-text-field>
+                  v-model="pembiayaanBody.tgltrn" readonly></v-text-field>
               </v-col>
               <v-col>
                 <v-text-field name="jnsproduk" label="Jenis Produk" id="jnsproduk"
-                  v-model="pembiayaanBody.jnsproduk"></v-text-field>
+                  v-model="pembiayaanBody.jnsproduk" readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
                 <v-text-field name="jnskend" label="Jenis Kendaraan" id="jnskend"
-                  v-model="pembiayaanBody.jnskend"></v-text-field>
+                  v-model="pembiayaanBody.jnskend" readonly></v-text-field>
               </v-col>
               <v-col>
                 <v-text-field name="merkkend" label="Merk" id="merkkend"
-                  v-model="pembiayaanBody.merkkend"></v-text-field>
+                  v-model="pembiayaanBody.merkkend" readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
                 <v-text-field name="thnbuat" label="Tahun Buat" id="thnbuat"
-                  v-model="pembiayaanBody.thnbuat"></v-text-field>
+                  v-model="pembiayaanBody.thnbuat" readonly></v-text-field>
               </v-col>
               <v-col>
-                <v-text-field name="warna" label="Warna" id="warna" v-model="pembiayaanBody.warna"></v-text-field>
+                <v-text-field name="warna" label="Warna" id="warna" v-model="pembiayaanBody.warna" readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
                 <v-text-field name="tipekend" label="Tipe" id="tipekend"
-                  v-model="pembiayaanBody.tipekend"></v-text-field>
+                  v-model="pembiayaanBody.tipekend" readonly></v-text-field>
               </v-col>
               <v-col>
-                <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="pembiayaanBody.nopol"></v-text-field>
+                <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="pembiayaanBody.nopol" readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
-                <v-text-field name="nobpkb" label="No. BPKB" id="nobpkb" v-model="pembiayaanBody.nobpkb"></v-text-field>
+                <v-text-field name="nobpkb" label="No. BPKB" id="nobpkb" v-model="pembiayaanBody.nobpkb" readonly></v-text-field>
               </v-col>
               <v-col>
                 <v-text-field name="odometer" label="Odometer" id="odometer"
-                  v-model="pembiayaanBody.odometer"></v-text-field>
+                  v-model="pembiayaanBody.odometer" readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
                 <v-text-field name="konkend" label="Kondisi Kendaraan" id="konkend"
-                  v-model="pembiayaanBody.konkend"></v-text-field>
+                  v-model="pembiayaanBody.konkend" readonly></v-text-field>
               </v-col>
               <v-col>
                 <v-text-field name="nlpasar" label="Nilai Pasar" id="nlpasar"
-                  v-model="pembiayaanBody.nlpasar"></v-text-field>
+                  v-model="pembiayaanBody.nlpasar" readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
                 <v-text-field name="nominal" label="Nilai Pokok" id="nominal"
-                  v-model="pembiayaanBody.nominal"></v-text-field>
+                  v-model="pembiayaanBody.nominal" readonly></v-text-field>
               </v-col>
               <v-col>
                 <v-text-field name="persen" label="Persen Pokok" id="persen"
-                  v-model="pembiayaanBody.persen"></v-text-field>
+                  v-model="pembiayaanBody.persen" readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
-                <v-checkbox name="bpkbflg" label="BPKB Asli" id="bpkbflg" v-model="pembiayaanBody.bpkbflg"></v-checkbox>
+                <v-checkbox name="bpkbflg" label="BPKB Asli" id="bpkbflg" v-model="pembiayaanBody.bpkbflg" readonly></v-checkbox>
               </v-col>
               <v-col>
                 <v-checkbox name="faktura" label="Faktur Asli" id="faktura"
-                  v-model="pembiayaanBody.faktura"></v-checkbox>
+                  v-model="pembiayaanBody.faktura" readonly></v-checkbox>
               </v-col>
               <v-col>
-                <v-checkbox name="ktpflg" label="KTP (BPKB)" id="ktpflg" v-model="pembiayaanBody.ktpflg"></v-checkbox>
+                <v-checkbox name="ktpflg" label="KTP (BPKB)" id="ktpflg" v-model="pembiayaanBody.ktpflg" readonly></v-checkbox>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
-                <v-checkbox name="nikflg" label="NIK Asli" id="nikflg" v-model="pembiayaanBody.nikflg"></v-checkbox>
+                <v-checkbox name="nikflg" label="NIK Asli" id="nikflg" v-model="pembiayaanBody.nikflg" readonly></v-checkbox>
               </v-col>
               <v-col>
-                <v-checkbox name="stnkflg" label="STNK Copy" id="stnkflg" v-model="pembiayaanBody.stnkflg"></v-checkbox>
+                <v-checkbox name="stnkflg" label="STNK Copy" id="stnkflg" v-model="pembiayaanBody.stnkflg" readonly></v-checkbox>
               </v-col>
               <v-col>
                 <v-checkbox name="kwitansiflg" label="Kwitansi Kosong Bermaterai" id="kwitansiflg"
-                  v-model="pembiayaanBody.kwitansiflg"></v-checkbox>
+                  v-model="pembiayaanBody.kwitansiflg" readonly></v-checkbox>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
                 <v-checkbox name="nokanosin" label="Esek-Esek Noka Nosin" id="nokanosin"
-                  v-model="pembiayaanBody.nokanosin"></v-checkbox>
+                  v-model="pembiayaanBody.nokanosin" readonly></v-checkbox>
               </v-col>
               <v-col>
                 <v-checkbox name="sphflg" label="Surat Pelepasan Hak" id="sphflg"
-                  v-model="pembiayaanBody.sphflg"></v-checkbox>
+                  v-model="pembiayaanBody.sphflg" readonly></v-checkbox>
               </v-col>
               <v-col>
                 <v-checkbox name="kwjbflg" label="Kwitansi Jual Beli" id="kwjbflg"
-                  v-model="pembiayaanBody.kwjbflg"></v-checkbox>
+                  v-model="pembiayaanBody.kwjbflg" readonly></v-checkbox>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
                 <v-checkbox name="fakturc" label="Form A/Vin" id="fakturc"
-                  v-model="pembiayaanBody.fakturc"></v-checkbox>
+                  v-model="pembiayaanBody.fakturc" readonly></v-checkbox>
               </v-col>
             </v-row>
 
@@ -394,24 +394,24 @@
             <v-row>
               <v-col>
                 <v-text-field name="nodealer" label="No. Dealer" id="nodealer"
-                  v-model="odometerBody.nodealer"></v-text-field>
+                  v-model="odometerBody.nodealer" readonly></v-text-field>
               </v-col>
               <v-col>
                 <v-text-field name="namadealer" label="Nama Dealer" id="namadealer"
-                  v-model="odometerBody.nmdealer"></v-text-field>
+                  v-model="odometerBody.nmdealer" readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
-                <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="odometerBody.nopol"></v-text-field>
+                <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="odometerBody.nopol" readonly></v-text-field>
               </v-col>
               <v-col>
                 <v-text-field name="odolama" label="Odometer RO Sebelum" id="odolama"
-                  v-model="odometerBody.odolama"></v-text-field>
+                  v-model="odometerBody.odolama" readonly></v-text-field>
               </v-col>
               <v-col>
                 <v-text-field name="odometer" label="Odometer RO Sekarang" id="odometer"
-                  v-model="odometerBody.odometer"></v-text-field>
+                  v-model="odometerBody.odometer" readonly></v-text-field>
               </v-col>
             </v-row>
           </v-form>
