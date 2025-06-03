@@ -15,8 +15,10 @@
             </v-row>
             <v-row>
               <v-col>
-                <MenuButton icon="mdi-note-edit" buttonText="Pembiayaan Dealer"
-                  :onClick="() => { dialogPilihPembiayaan = true }" size="100" color="secondary" />
+                <MenuButton icon="mdi-note-edit" buttonText="Pembiayaan Dealer" :onClick="async () => {
+                  dialogListPembiayaan = true
+                  await getAllPembiayaan() // get semua data pembiayaan 
+                }" size="100" color="secondary" />
               </v-col>
               <v-col>
                 <MenuButton icon="mdi-check-circle-outline" buttonText="Perpanjangan RO"
@@ -214,15 +216,20 @@
 
           </v-form>
           <v-container grid-list-md>
-            <v-form @submit.prevent="uploadImage('1')">
+            <v-form @submit.prevent="uploadImage('1', ['detail-unit', 'pencairan'])">
               <v-row>
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
-                  <v-file-input v-model="field.file"
-                    :label="field.flag === 'M' ? `${field.keterangan} (Wajib)` : field.keterangan" accept="image/*"
-                    :name="field.kode" prepend-icon="mdi-image" @change="onImageChange(index)" variant="outlined"
-                    :rules="field.flag === 'M' && !field.src ? [requiredRule] : []"></v-file-input>
+                  <v-file-input v-model="field.file" accept="image/*" :name="field.kode" prepend-icon="mdi-image"
+                    @change="onImageChange(index)" variant="outlined"
+                    :rules="field.flag === 'M' && !field.src ? [requiredRule] : []">
+                    <template v-slot:label>
+                      <span :class="(field.flag === 'M' && !field.src) ? `text-red` : ``">{{ field.flag === 'M' ? `*
+                        ${field.keterangan}` : field.keterangan
+                      }}</span>
+                    </template>
+                  </v-file-input>
                   <ImageWithDelete v-if="field.src" :imageUrl="field.src"
-                    @delete="deleteImage(field.kode, index, pencairanBody.nodealer, pencairanBody.nou, null, null, '1')" />
+                    @delete="deleteImage(field.kode, index, pencairanBody.nodealer, pencairanBody.nou, null, null, '1', ['pencairan', 'detail-unit'])" />
                   <!-- <v-img v-if="field.src" :src="field.src" max-height="200" class="my-4"
                     @click="deleteImage(field.kode, index)"></v-img> -->
                 </v-col>
@@ -287,6 +294,7 @@
         <v-card-actions>
           <v-btn color="secondary" @click="async () => {
             await getOdometer(selectedDealer.noregfas, selectedNopol.nofas, selectedRO) // simpan data berkaitan odometer
+            await getPerpanjanganROImages() // get data gambar perpanjangan RO
             dialogOdometer = true // buka dialog details odometer
           }">Check</v-btn>
         </v-card-actions>
@@ -314,10 +322,30 @@
             <v-text-field name="odometer" label="Odometer RO Sekarang" id="odometer"
               v-model="odometerBody.odometer"></v-text-field>
           </v-form>
+          <v-container grid-list-sm>
+            <v-form @submit.prevent="uploadImage('2', ['perpanjangan-ro', 'odometer'])">
+              <v-row>
+                <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
+                  <v-file-input v-model="field.file" accept="image/*" :name="field.kode" prepend-icon="mdi-image"
+                    @change="onImageChange(index)" variant="outlined"
+                    :rules="field.flag === 'M' && !field.src ? [requiredRule] : []">
+                    <template v-slot:label>
+                      <span :class="(field.flag === 'M' && !field.src) ? `text-red` : ``">{{ field.flag === 'M' ? `*
+                        ${field.keterangan}` : field.keterangan
+                      }}</span>
+                    </template>
+                  </v-file-input>
+                  <ImageWithDelete v-if="field.src" :imageUrl="field.src"
+                    @delete="deleteImage(field.kode, index, null, null, selectedNopol.nofas, selectedRO, '2', ['perpanjangan-ro', 'odometer'])" />
+                </v-col>
+              </v-row>
+              <v-btn color="primary" type="submit">Upload Foto</v-btn>
+            </v-form>
+          </v-container>
         </v-card-text>
-        <v-card-actions>
-          <v-btn color="secondary" @click="onClickPerpanjanganNext">Next</v-btn>
-        </v-card-actions>
+        <!-- <v-card-actions>
+          <v-btn color="secondary" @click="getPerpanjanganROImages">Next</v-btn>
+        </v-card-actions> -->
       </v-card>
     </v-dialog>
 
@@ -336,10 +364,14 @@
             <v-form @submit.prevent="uploadImage('2')">
               <v-row>
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
-                  <v-file-input v-model="field.file"
-                    :label="field.flag === 'M' ? `${field.keterangan} (Wajib)` : field.keterangan" accept="image/*"
-                    :name="field.kode" prepend-icon="mdi-image" @change="onImageChange(index)" variant="outlined"
-                    :rules="field.flag === 'M' && !field.src ? [requiredRule] : []"></v-file-input>
+                  <v-file-input v-model="field.file" accept="image/*" :name="field.kode" prepend-icon="mdi-image"
+                    @change="onImageChange(index)" variant="outlined"
+                    :rules="field.flag === 'M' && !field.src ? [requiredRule] : []">
+                    <template>
+                      <span class="text-red">{{ field.flag === 'M' ? `* ${field.keterangan}` : field.keterangan
+                      }}</span>
+                    </template>
+                  </v-file-input>
                   <ImageWithDelete v-if="field.src" :imageUrl="field.src"
                     @delete="deleteImage(field.kode, index, null, null, selectedNopol.nofas, selectedRO, '2')" />
                   <!-- <v-img v-if="field.src" :src="field.src" max-height="200" class="my-4"
@@ -829,23 +861,63 @@ export default {
     }
 
     // delete gambar
-    const deleteImage = async (kode, index, nodealer = null, noupencairan = null, nofas = null, roke = null, type = '1') => {
-      try {
-        const res = await axios.post('http://localhost:8080/api/images/delete', {
-          nodealer,
-          noupencairan,
-          nofas,
-          roke,
-          kode,
-          type
-        })
+    const deleteImage = async (kode, index, nodealer = null, noupencairan = null, nofas = null, roke = null, type = '1', dialogList = []) => {
+      // 1 | pastikan user benar2 ingin mendelete gambar
+      toggleDialog(dialogList)
+      Swal.fire({
+        title: 'Hapus Gambar?',
+        text: "Gambar yang dihapus tidak bisa dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          // 2 | jalankan proses mendelete gambar jika user memang memilih untuk mendelete gambar
+          try {
+            const res = await axios.post('http://localhost:8080/api/images/delete', {
+              nodealer,
+              noupencairan,
+              nofas,
+              roke,
+              kode,
+              type
+            })
 
-        // delete src agar gambar tidak ditampilkan lagi
-        dokimg.value[index].src = null
+            if (res.status === 200 || res.status === '200') {
+              Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Gambar telah berhasil dihapus.',
+                timer: 2000,
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK',
+              }).then((result) => {
+                toggleDialog(dialogList)
+              })
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: 'Terjadi kesalahan saat menghapus data.',
+                confirmButtonText: 'OK',
+              }).then((result) => {
+                toggleDialog(dialogList)
+              })
+            }
 
-      } catch (error) {
-        console.log('Error, delete image failed: ', error)
-      }
+            // delete src agar gambar tidak ditampilkan lagi
+            dokimg.value[index].src = null
+
+          } catch (error) {
+            console.log('Error, delete image failed: ', error)
+          }
+        } else {
+          toggleDialog(dialogList)
+        }
+      })
     }
 
     // handler perubahan gambar upload pada form penginputan gambar
@@ -944,7 +1016,10 @@ export default {
     }
 
     // API upload image
-    async function uploadImage(type = '1') {
+    async function uploadImage(type, dialogList = []) {
+      // hilangkan dialog
+      toggleDialog(dialogList)
+
       const formData = new FormData();
       // type menentukan jenis flow upload image antara pembiayaan atau perpanjangan RO
 
@@ -954,7 +1029,6 @@ export default {
       const imgList = dokimg.value.filter((x) => x.file)
 
       // 2 | cegah user untuk mengupload image jika ada field wajib yang belum terisi
-      // console.log("Image List: ", dokimg.value)
       var validation = false
       dokimg.value.forEach((element, index) => {
         if (!element.src && element.flag === 'M') {
@@ -962,7 +1036,18 @@ export default {
         }
       });
       if (validation) {
-        alert('Field wajib belum semua terisi!')
+        Swal.fire({
+          icon: 'error',
+          title: 'Form Wajib Belum Lengkap!',
+          text: 'Semua foto wajib harus di upload terlebih dahulu.',
+          confirmButtonColor: '#d33',
+          confirmButtonText: 'Tutup',
+          customClass: {
+            popup: 'swal-top-z'
+          }
+        }).then(() => {
+          toggleDialog(dialogList)
+        })
         return
       }
 
@@ -993,11 +1078,45 @@ export default {
         const response = await axios.post("http://localhost:8080/api/uploadbulk", formData, {
           "Content-Type": "multipart/form-data",
         });
-        // const result = await response.json();
-        alert(response.data.message);
+
+        // tentukan response berdasarkan response HTTP
+        if ([201, '201'].includes(response.status)) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Foto-foto berhasil di-upload.',
+            timer: 2000,
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK',
+          }).then((result) => {
+            toggleDialog(dialogList)
+          })
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Upload Foto Gagal!',
+            text: 'Ada masalah dalam penguploadan foto.',
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Tutup',
+          }).then(() => {
+            toggleDialog(dialogList)
+          })
+        }
+
+        // // const result = await response.json();
+        // alert(response.data.message);
       } catch (err) {
         console.error(err);
-        alert("Gagal mengupload gambar");
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: err,
+          confirmButtonColor: '#d33',
+          confirmButtonText: 'Tutup',
+        }).then(() => {
+          toggleDialog(dialogList)
+        })
+
       }
     }
 
@@ -1045,7 +1164,7 @@ export default {
       }
     }
 
-    async function onClickPerpanjanganNext() {
+    async function getPerpanjanganROImages() {
       await getDokumentasiImage('R') // ambil daftar dokumentasi image bertipe 'R'
       const images = await getImages(null, null, selectedNopol.value.nofas, selectedRO.value, '2')
 
@@ -1059,8 +1178,6 @@ export default {
           }
         })
       })
-
-      dialogUploadPerpanjanganRO.value = true // buka dialog upload foto untuk perpanjangan RO
     }
 
     // API daftar dokumentasi image
@@ -1123,6 +1240,24 @@ export default {
 
     const requiredRule = v => !!v || 'Field ini wajib diisi!'
 
+    const toggleDialog = function (fields = []) {
+      if (fields.length <= 0) {
+        return
+      } else {
+        fields.forEach((row) => {
+          if (row === 'pencairan') {
+            dialogListPembiayaan.value = !dialogListPembiayaan.value // list pencairan
+          } else if (row === 'detail-unit') {
+            dialogPembiayaan.value = !dialogPembiayaan.value // detail unit
+          } else if (row === 'perpanjangan-ro') {
+            dialogPerpanjanganRO.value = !dialogPerpanjanganRO.value // hapus dialog perpanjangan ro
+          } else if (row === 'odometer') {
+            dialogOdometer.value = !dialogOdometer.value // odometer details
+          }
+        })
+      }
+    }
+
     return {
       noRegFas,
       noU,
@@ -1178,10 +1313,11 @@ export default {
       onImageChange2,
       updatePembiayaan,
       uploadImage,
-      onClickPerpanjanganNext,
+      getPerpanjanganROImages,
       getDokumentasiImage,
       onPembiayaanParameterChange,
-      requiredRule
+      requiredRule,
+      toggleDialog
     }
   },
 }
@@ -1190,5 +1326,9 @@ export default {
 <style>
 .swal-top-z {
   z-index: 9999 !important;
+}
+
+.text-red {
+  color: red;
 }
 </style>
