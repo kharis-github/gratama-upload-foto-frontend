@@ -1,5 +1,10 @@
 <template>
   <v-container>
+    <v-row>
+      <v-col>
+        <v-btn color="info" @click="logout">Logout</v-btn>
+      </v-col>
+    </v-row>
     <v-container grid-list-md justify="center">
       <v-card elevation="4" outlined shaped max-width="50rem" class="mx-auto" style="margin-top: 10%;">
         <v-card-title primary-title>
@@ -8,11 +13,6 @@
         <v-card-text>
           <v-container grid-list-md>
             <!-- Pembiayaan Dealer -->
-            <v-row>
-              <v-col>
-                <v-btn color="info" @click="logout">Logout</v-btn>
-              </v-col>
-            </v-row>
             <v-row>
               <v-col>
                 <MenuButton icon="mdi-note-edit" buttonText="Pembiayaan Dealer" :onClick="async () => {
@@ -82,56 +82,55 @@
 
     <v-dialog v-model="dialogListPembiayaan" max-width="1000px">
       <v-card>
-        <v-card-title>
+        <v-card-title class="d-flex justify-end pa-2">
           List Pencairan
           <v-spacer></v-spacer>
-          <v-row justify="center">
-            <v-col cols="12">
-              <v-btn class="ms-auto" text="Close" @click="closeDialog('list-pembiayaan')"></v-btn>
-            </v-col>
-          </v-row>
-          <v-row justify="center">
-            <v-col cols="12">
-              <v-autocomplete :items="cabangList" item-title="label" item-value="value" v-model="selectedCabang"
-                label="Daftar Cabang" @update:model-value="onPembiayaanParameterChange"></v-autocomplete>
-            </v-col>
-          </v-row>
-          <!-- Search Field -->
-          <v-spacer></v-spacer>
-          <v-row justify="center">
-            <!-- Search Field Nama Dealer -->
-            <v-col>
-              <v-text-field v-model="nmDealerSearch" name="nmdealersearch" label="Search Nama Dealer"
-                prepend-inner-icon="mdi-magnify" id="nmdealersearch"
-                @input="onPembiayaanParameterChange"></v-text-field>
-            </v-col>
-            <!-- Search Field Nomor Polisi -->
-            <v-col>
-              <v-text-field v-model="nopolSearch" name="nopolsearch" label="Search No. Polisi"
-                prepend-inner-icon="mdi-magnify" id="nopolsearch" @input="onPembiayaanParameterChange"></v-text-field>
-            </v-col>
-          </v-row>
-          <v-spacer></v-spacer>
+          <v-btn icon @click="closeDialog('list-pembiayaan')" class="ma-0" style="color: red;">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
 
         <v-card-text>
-          <v-data-table :headers="pembiayaanHeaders" :items="listPembiayaanValues" :loading="loading"
-            loading-text="Mengambil data..." class="elevation-1">
-            <template #item="{ item }">
-              <tr @click="onRowClickPembiayaan(item)" style="cursor: pointer;">
-                <td>{{ item.kode }}</td>
-                <td>{{ item.nopol }}</td>
-                <td>{{ item.nmdealer }}</td>
-                <td>{{ item.jnsproduk }}</td>
-              </tr>
-            </template>
-          </v-data-table>
+          <v-container grid-list-sm>
+            <v-row justify="center">
+              <v-col cols="12">
+                <v-autocomplete :items="cabangList" item-title="label" item-value="value" v-model="selectedCabang"
+                  label="Daftar Cabang" @update:model-value="onPembiayaanParameterChange"></v-autocomplete>
+              </v-col>
+            </v-row>
+            <!-- Search Field -->
+            <v-spacer></v-spacer>
+            <v-row justify="center">
+              <!-- Search Field Nama Dealer -->
+              <v-col>
+                <v-text-field v-model="nmDealerSearch" name="nmdealersearch" label="Search Nama Dealer"
+                  prepend-inner-icon="mdi-magnify" id="nmdealersearch"
+                  @input="onPembiayaanParameterChange"></v-text-field>
+              </v-col>
+              <!-- Search Field Nomor Polisi -->
+              <v-col>
+                <v-text-field v-model="nopolSearch" name="nopolsearch" label="Search No. Polisi"
+                  prepend-inner-icon="mdi-magnify" id="nopolsearch" @input="onPembiayaanParameterChange"></v-text-field>
+              </v-col>
+            </v-row>
+            <v-data-table :headers="pembiayaanHeaders" :items="listPembiayaanValues" :loading="loading"
+              loading-text="Mengambil data..." class="elevation-1">
+              <template #item="{ item }">
+                <tr @click="onRowClickPembiayaan(item)" style="cursor: pointer;">
+                  <td>{{ item.kode }}</td>
+                  <td>{{ item.nopol }}</td>
+                  <td>{{ item.nmdealer }}</td>
+                  <td>{{ item.jnsproduk }}</td>
+                </tr>
+              </template>
+            </v-data-table>
+          </v-container>
         </v-card-text>
       </v-card>
     </v-dialog>
 
     <!-- PENCAIRAN DETAILS DIALOG -->
-    <v-dialog v-model="dialogPencairan" scrollable persistent :overlay="false" max-width="800"
+    <v-dialog v-model="dialogPencairan" scrollable persistent :overlay="false" max-width="1000"
       transition="dialog-transition">
       <v-card>
         <v-card-title primary-title>
@@ -165,54 +164,130 @@
     </v-dialog>
 
     <!-- PEMBIAYAAN DETAILS DIALOG -->
-    <v-dialog v-model="dialogPembiayaan" scrollable persistent :overlay="false" max-width="800"
+    <v-dialog v-model="dialogPembiayaan" scrollable persistent :overlay="false" max-width="1000"
       transition="dialog-transition">
       <v-card>
-        <v-card-title primary-title>
+        <v-card-title primary-title class="d-flex justify-end pa-2">
           Detail Unit
           <v-spacer></v-spacer>
-          <v-btn class="ms-auto" text="Close" @click="closeDialog('pembiayaan-dealer')"></v-btn>
+          <v-btn icon @click="closeDialog('pembiayaan-dealer')" class="ma-0" style="color: red;">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
 
         <v-card-text>
           <v-form @submit.prevent="updatePembiayaan">
-            <v-text-field name="tgltrn" label="Tanggal Pencairan" id="tgltrn"
-              v-model="pembiayaanBody.tgltrn"></v-text-field>
-            <v-text-field name="jnsproduk" label="Jenis Produk" id="jnsproduk"
-              v-model="pembiayaanBody.jnsproduk"></v-text-field>
-            <v-text-field name="jnskend" label="Jenis Kendaraan" id="jnskend"
-              v-model="pembiayaanBody.jnskend"></v-text-field>
-            <v-text-field name="merkkend" label="Merk" id="merkkend" v-model="pembiayaanBody.merkkend"></v-text-field>
-            <v-text-field name="thnbuat" label="Tahun Buat" id="thnbuat"
-              v-model="pembiayaanBody.thnbuat"></v-text-field>
-            <v-text-field name="warna" label="Warna" id="warna" v-model="pembiayaanBody.warna"></v-text-field>
-            <v-text-field name="tipekend" label="Tipe" id="tipekend" v-model="pembiayaanBody.tipekend"></v-text-field>
-            <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="pembiayaanBody.nopol"></v-text-field>
-            <v-text-field name="nobpkb" label="No. BPKB" id="nobpkb" v-model="pembiayaanBody.nobpkb"></v-text-field>
-            <v-text-field name="odometer" label="Odometer" id="odometer"
-              v-model="pembiayaanBody.odometer"></v-text-field>
-            <v-text-field name="konkend" label="Kondisi Kendaraan" id="konkend"
-              v-model="pembiayaanBody.konkend"></v-text-field>
-            <v-text-field name="nlpasar" label="Nilai Pasar" id="nlpasar"
-              v-model="pembiayaanBody.nlpasar"></v-text-field>
-            <v-text-field name="nominal" label="Nilai Pokok" id="nominal"
-              v-model="pembiayaanBody.nominal"></v-text-field>
-            <v-text-field name="persen" label="Persen Pokok" id="persen" v-model="pembiayaanBody.persen"></v-text-field>
-
-            <v-checkbox name="bpkbflg" label="BPKB Asli" id="bpkbflg" v-model="pembiayaanBody.bpkbflg"></v-checkbox>
-            <v-checkbox name="faktura" label="Faktur Asli" id="faktura" v-model="pembiayaanBody.faktura"></v-checkbox>
-            <v-checkbox name="ktpflg" label="KTP (BPKB)" id="ktpflg" v-model="pembiayaanBody.ktpflg"></v-checkbox>
-            <v-checkbox name="nikflg" label="NIK Asli" id="nikflg" v-model="pembiayaanBody.nikflg"></v-checkbox>
-            <v-checkbox name="stnkflg" label="STNK Copy" id="stnkflg" v-model="pembiayaanBody.stnkflg"></v-checkbox>
-            <v-checkbox name="kwitansiflg" label="Kwitansi Kosong Bermaterai" id="kwitansiflg"
-              v-model="pembiayaanBody.kwitansiflg"></v-checkbox>
-            <v-checkbox name="nokanosin" label="Esek-Esek Noka Nosin" id="nokanosin"
-              v-model="pembiayaanBody.nokanosin"></v-checkbox>
-            <v-checkbox name="sphflg" label="Surat Pelepasan Hak" id="sphflg"
-              v-model="pembiayaanBody.sphflg"></v-checkbox>
-            <v-checkbox name="kwjbflg" label="Kwitansi Jual Beli" id="kwjbflg"
-              v-model="pembiayaanBody.kwjbflg"></v-checkbox>
-            <v-checkbox name="fakturc" label="Form A/Vin" id="fakturc" v-model="pembiayaanBody.fakturc"></v-checkbox>
+            <v-row>
+              <v-col>
+                <v-text-field name="tgltrn" label="Tanggal Pencairan" id="tgltrn"
+                  v-model="pembiayaanBody.tgltrn"></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="jnsproduk" label="Jenis Produk" id="jnsproduk"
+                  v-model="pembiayaanBody.jnsproduk"></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-text-field name="jnskend" label="Jenis Kendaraan" id="jnskend"
+                  v-model="pembiayaanBody.jnskend"></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="merkkend" label="Merk" id="merkkend"
+                  v-model="pembiayaanBody.merkkend"></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-text-field name="thnbuat" label="Tahun Buat" id="thnbuat"
+                  v-model="pembiayaanBody.thnbuat"></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="warna" label="Warna" id="warna" v-model="pembiayaanBody.warna"></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-text-field name="tipekend" label="Tipe" id="tipekend"
+                  v-model="pembiayaanBody.tipekend"></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="pembiayaanBody.nopol"></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-text-field name="nobpkb" label="No. BPKB" id="nobpkb" v-model="pembiayaanBody.nobpkb"></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="odometer" label="Odometer" id="odometer"
+                  v-model="pembiayaanBody.odometer"></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-text-field name="konkend" label="Kondisi Kendaraan" id="konkend"
+                  v-model="pembiayaanBody.konkend"></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="nlpasar" label="Nilai Pasar" id="nlpasar"
+                  v-model="pembiayaanBody.nlpasar"></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-text-field name="nominal" label="Nilai Pokok" id="nominal"
+                  v-model="pembiayaanBody.nominal"></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="persen" label="Persen Pokok" id="persen"
+                  v-model="pembiayaanBody.persen"></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-checkbox name="bpkbflg" label="BPKB Asli" id="bpkbflg" v-model="pembiayaanBody.bpkbflg"></v-checkbox>
+              </v-col>
+              <v-col>
+                <v-checkbox name="faktura" label="Faktur Asli" id="faktura"
+                  v-model="pembiayaanBody.faktura"></v-checkbox>
+              </v-col>
+              <v-col>
+                <v-checkbox name="ktpflg" label="KTP (BPKB)" id="ktpflg" v-model="pembiayaanBody.ktpflg"></v-checkbox>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-checkbox name="nikflg" label="NIK Asli" id="nikflg" v-model="pembiayaanBody.nikflg"></v-checkbox>
+              </v-col>
+              <v-col>
+                <v-checkbox name="stnkflg" label="STNK Copy" id="stnkflg" v-model="pembiayaanBody.stnkflg"></v-checkbox>
+              </v-col>
+              <v-col>
+                <v-checkbox name="kwitansiflg" label="Kwitansi Kosong Bermaterai" id="kwitansiflg"
+                  v-model="pembiayaanBody.kwitansiflg"></v-checkbox>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-checkbox name="nokanosin" label="Esek-Esek Noka Nosin" id="nokanosin"
+                  v-model="pembiayaanBody.nokanosin"></v-checkbox>
+              </v-col>
+              <v-col>
+                <v-checkbox name="sphflg" label="Surat Pelepasan Hak" id="sphflg"
+                  v-model="pembiayaanBody.sphflg"></v-checkbox>
+              </v-col>
+              <v-col>
+                <v-checkbox name="kwjbflg" label="Kwitansi Jual Beli" id="kwjbflg"
+                  v-model="pembiayaanBody.kwjbflg"></v-checkbox>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-checkbox name="fakturc" label="Form A/Vin" id="fakturc"
+                  v-model="pembiayaanBody.fakturc"></v-checkbox>
+              </v-col>
+            </v-row>
 
           </v-form>
           <v-container grid-list-md>
@@ -250,13 +325,15 @@
     </v-dialog>
 
     <!-- MENU PERPANJANGAN RO -->
-    <v-dialog v-model="dialogPerpanjanganRO" scrollable persistent :overlay="false" max-width="800"
+    <v-dialog v-model="dialogPerpanjanganRO" scrollable persistent :overlay="false" max-width="1000"
       transition="dialog-transition">
       <v-card>
-        <v-card-title primary-title>
+        <v-card-title primary-title class="d-flex justify-end pa-2">
           Perpanjangan RO
           <v-spacer></v-spacer>
-          <v-btn class="ms-auto" text="Close" @click="closeDialog('perpanjangan-ro')"></v-btn>
+          <v-btn icon @click="closeDialog('perpanjangan-ro')" class="ma-0" style="color: red;">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-card-text>
           <v-form>
@@ -302,25 +379,41 @@
     </v-dialog>
 
     <!-- ODOMETER DETAILS -->
-    <v-dialog v-model="dialogOdometer" scrollable persistent :overlay="false" max-width="800"
+    <v-dialog v-model="dialogOdometer" scrollable persistent :overlay="false" max-width="1000"
       transition="dialog-transition">
       <v-card>
-        <v-card-title primary-title>
+        <v-card-title primary-title class="d-flex justify-end pa-2">
           Odometer Details
           <v-spacer></v-spacer>
-          <v-btn class="ms-auto" text="Close" @click="closeDialog('odometer-details')"></v-btn>
+          <v-btn icon @click="closeDialog('odometer-details')" class="ma-0" style="color: red;">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-card-text>
           <v-form>
-            <v-text-field name="nodealer" label="No. Dealer" id="nodealer"
-              v-model="odometerBody.nodealer"></v-text-field>
-            <v-text-field name="namadealer" label="Nama Dealer" id="namadealer"
-              v-model="odometerBody.nmdealer"></v-text-field>
-            <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="odometerBody.nopol"></v-text-field>
-            <v-text-field name="odolama" label="Odometer RO Sebelum" id="odolama"
-              v-model="odometerBody.odolama"></v-text-field>
-            <v-text-field name="odometer" label="Odometer RO Sekarang" id="odometer"
-              v-model="odometerBody.odometer"></v-text-field>
+            <v-row>
+              <v-col>
+                <v-text-field name="nodealer" label="No. Dealer" id="nodealer"
+                  v-model="odometerBody.nodealer"></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="namadealer" label="Nama Dealer" id="namadealer"
+                  v-model="odometerBody.nmdealer"></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="odometerBody.nopol"></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="odolama" label="Odometer RO Sebelum" id="odolama"
+                  v-model="odometerBody.odolama"></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="odometer" label="Odometer RO Sekarang" id="odometer"
+                  v-model="odometerBody.odometer"></v-text-field>
+              </v-col>
+            </v-row>
           </v-form>
           <v-container grid-list-sm>
             <v-form @submit.prevent="uploadImage('2', ['perpanjangan-ro', 'odometer'])">
@@ -350,7 +443,7 @@
     </v-dialog>
 
     <!-- DIALOG UPLOAD FOTO UNTUK PERPANJANGAN RO -->
-    <v-dialog v-model="dialogUploadPerpanjanganRO" scrollable persistent :overlay="false" max-width="800"
+    <v-dialog v-model="dialogUploadPerpanjanganRO" scrollable persistent :overlay="false" max-width="1000"
       transition="dialog-transition">
       <v-card>
         <v-card-title primary-title>
