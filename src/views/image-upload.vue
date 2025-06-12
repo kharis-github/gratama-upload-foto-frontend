@@ -8,7 +8,7 @@
     <v-container grid-list-md justify="center">
       <v-card elevation="4" outlined shaped max-width="50rem" class="mx-auto" style="margin-top: 10%;">
         <v-card-title primary-title>
-          <b>Gratama Upload Image Desktop</b>
+          <b>Gratama Upload Foto Desktop</b>
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md>
@@ -95,7 +95,7 @@
             <v-row justify="center">
               <v-col cols="12">
                 <v-autocomplete :items="cabangList" item-title="label" item-value="value" v-model="selectedCabang"
-                  label="Daftar Cabang" @update:model-value="onPembiayaanParameterChange"></v-autocomplete>
+                  label="Daftar Cabang" @update:model-value="onCabangChange()"></v-autocomplete>
               </v-col>
             </v-row>
             <!-- Search Field -->
@@ -140,21 +140,22 @@
         </v-card-title>
         <v-card-text>
           <v-form>
-            <v-text-field name="nodealer" label="No. Dealer" id="nodealer"
-              v-model="pencairanBody.nodealer" readonly></v-text-field>
-            <v-text-field name="outstanding" label="Outstanding" id="outstanding"
-              v-model="pencairanBody.outstanding" readonly></v-text-field>
-            <v-text-field name="nmdealer" label="Nama Dealer" id="nmdealer"
-              v-model="pencairanBody.nmdealer" readonly></v-text-field>
-            <v-text-field name="nmdebitur" label="Nama Pemilik" id="nmdebitur"
-              v-model="pencairanBody.nmdebitur" readonly></v-text-field>
-            <v-text-field name="marketing" label="marketing" id="marketing"
-              v-model="pencairanBody.marketing" readonly></v-text-field>
+            <v-text-field name="nodealer" label="No. Dealer" id="nodealer" v-model="pencairanBody.nodealer"
+              readonly></v-text-field>
+            <v-text-field name="outstanding" label="Outstanding" id="outstanding" v-model="pencairanBody.outstanding"
+              readonly></v-text-field>
+            <v-text-field name="nmdealer" label="Nama Dealer" id="nmdealer" v-model="pencairanBody.nmdealer"
+              readonly></v-text-field>
+            <v-text-field name="nmdebitur" label="Nama Pemilik" id="nmdebitur" v-model="pencairanBody.nmdebitur"
+              readonly></v-text-field>
+            <v-text-field name="marketing" label="marketing" id="marketing" v-model="pencairanBody.marketing"
+              readonly></v-text-field>
             <v-text-field name="jthtempomou" label="Jatuh Tempo MOU" id="jthtempomou"
               v-model="pencairanBody.jthtempomou" readonly></v-text-field>
-            <v-text-field name="plafond" label="Plafond" id="planfond" v-model="pencairanBody.plafond" readonly></v-text-field>
-            <v-text-field name="plfsisa" label="Plafond Sisa" id="plfsisa"
-              v-model="pencairanBody.plfsisa" readonly></v-text-field>
+            <v-text-field name="plafond" label="Plafond" id="planfond" v-model="pencairanBody.plafond"
+              readonly></v-text-field>
+            <v-text-field name="plfsisa" label="Plafond Sisa" id="plfsisa" v-model="pencairanBody.plfsisa"
+              readonly></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -179,89 +180,96 @@
           <v-form @submit.prevent="updatePembiayaan">
             <v-row>
               <v-col>
-                <v-text-field name="tgltrn" label="Tanggal Pencairan" id="tgltrn"
-                  v-model="pembiayaanBody.tgltrn" readonly></v-text-field>
+                <v-text-field name="tgltrn" label="Tanggal Pencairan" id="tgltrn" v-model="pembiayaanBody.tgltrn"
+                  readonly></v-text-field>
               </v-col>
               <v-col>
-                <v-text-field name="jnsproduk" label="Jenis Produk" id="jnsproduk"
-                  v-model="pembiayaanBody.jnsproduk" readonly></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field name="jnskend" label="Jenis Kendaraan" id="jnskend"
-                  v-model="pembiayaanBody.jnskend" readonly></v-text-field>
-              </v-col>
-              <v-col>
-                <v-text-field name="merkkend" label="Merk" id="merkkend"
-                  v-model="pembiayaanBody.merkkend" readonly></v-text-field>
+                <v-text-field name="jnsproduk" label="Jenis Produk" id="jnsproduk" v-model="pembiayaanBody.jnsproduk"
+                  readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
-                <v-text-field name="thnbuat" label="Tahun Buat" id="thnbuat"
-                  v-model="pembiayaanBody.thnbuat" readonly></v-text-field>
+                <v-text-field name="jnskend" label="Jenis Kendaraan" id="jnskend" v-model="pembiayaanBody.jnskend"
+                  readonly></v-text-field>
               </v-col>
               <v-col>
-                <v-text-field name="warna" label="Warna" id="warna" v-model="pembiayaanBody.warna" readonly></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field name="tipekend" label="Tipe" id="tipekend"
-                  v-model="pembiayaanBody.tipekend" readonly></v-text-field>
-              </v-col>
-              <v-col>
-                <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="pembiayaanBody.nopol" readonly></v-text-field>
+                <v-text-field name="merkkend" label="Merk" id="merkkend" v-model="pembiayaanBody.merkkend"
+                  readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
-                <v-text-field name="nobpkb" label="No. BPKB" id="nobpkb" v-model="pembiayaanBody.nobpkb" readonly></v-text-field>
+                <v-text-field name="thnbuat" label="Tahun Buat" id="thnbuat" v-model="pembiayaanBody.thnbuat"
+                  readonly></v-text-field>
               </v-col>
               <v-col>
-                <v-text-field name="odometer" label="Odometer" id="odometer"
-                  v-model="pembiayaanBody.odometer" readonly></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field name="konkend" label="Kondisi Kendaraan" id="konkend"
-                  v-model="pembiayaanBody.konkend" readonly></v-text-field>
-              </v-col>
-              <v-col>
-                <v-text-field name="nlpasar" label="Nilai Pasar" id="nlpasar"
-                  v-model="pembiayaanBody.nlpasar" readonly></v-text-field>
+                <v-text-field name="warna" label="Warna" id="warna" v-model="pembiayaanBody.warna"
+                  readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
-                <v-text-field name="nominal" label="Nilai Pokok" id="nominal"
-                  v-model="pembiayaanBody.nominal" readonly></v-text-field>
+                <v-text-field name="tipekend" label="Tipe" id="tipekend" v-model="pembiayaanBody.tipekend"
+                  readonly></v-text-field>
               </v-col>
               <v-col>
-                <v-text-field name="persen" label="Persen Pokok" id="persen"
-                  v-model="pembiayaanBody.persen" readonly></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-checkbox name="bpkbflg" label="BPKB Asli" id="bpkbflg" v-model="pembiayaanBody.bpkbflg" readonly></v-checkbox>
-              </v-col>
-              <v-col>
-                <v-checkbox name="faktura" label="Faktur Asli" id="faktura"
-                  v-model="pembiayaanBody.faktura" readonly></v-checkbox>
-              </v-col>
-              <v-col>
-                <v-checkbox name="ktpflg" label="KTP (BPKB)" id="ktpflg" v-model="pembiayaanBody.ktpflg" readonly></v-checkbox>
+                <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="pembiayaanBody.nopol"
+                  readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
-                <v-checkbox name="nikflg" label="NIK Asli" id="nikflg" v-model="pembiayaanBody.nikflg" readonly></v-checkbox>
+                <v-text-field name="nobpkb" label="No. BPKB" id="nobpkb" v-model="pembiayaanBody.nobpkb"
+                  readonly></v-text-field>
               </v-col>
               <v-col>
-                <v-checkbox name="stnkflg" label="STNK Copy" id="stnkflg" v-model="pembiayaanBody.stnkflg" readonly></v-checkbox>
+                <v-text-field name="odometer" label="Odometer" id="odometer" v-model="pembiayaanBody.odometer"
+                  readonly></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-text-field name="konkend" label="Kondisi Kendaraan" id="konkend" v-model="pembiayaanBody.konkend"
+                  readonly></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="nlpasar" label="Nilai Pasar" id="nlpasar" v-model="pembiayaanBody.nlpasar"
+                  readonly></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-text-field name="nominal" label="Nilai Pokok" id="nominal" v-model="pembiayaanBody.nominal"
+                  readonly></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field name="persen" label="Persen Pokok" id="persen" v-model="pembiayaanBody.persen"
+                  readonly></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-checkbox name="bpkbflg" label="BPKB Asli" id="bpkbflg" v-model="pembiayaanBody.bpkbflg"
+                  readonly></v-checkbox>
+              </v-col>
+              <v-col>
+                <v-checkbox name="faktura" label="Faktur Asli" id="faktura" v-model="pembiayaanBody.faktura"
+                  readonly></v-checkbox>
+              </v-col>
+              <v-col>
+                <v-checkbox name="ktpflg" label="KTP (BPKB)" id="ktpflg" v-model="pembiayaanBody.ktpflg"
+                  readonly></v-checkbox>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-checkbox name="nikflg" label="NIK Asli" id="nikflg" v-model="pembiayaanBody.nikflg"
+                  readonly></v-checkbox>
+              </v-col>
+              <v-col>
+                <v-checkbox name="stnkflg" label="STNK Copy" id="stnkflg" v-model="pembiayaanBody.stnkflg"
+                  readonly></v-checkbox>
               </v-col>
               <v-col>
                 <v-checkbox name="kwitansiflg" label="Kwitansi Kosong Bermaterai" id="kwitansiflg"
@@ -274,18 +282,18 @@
                   v-model="pembiayaanBody.nokanosin" readonly></v-checkbox>
               </v-col>
               <v-col>
-                <v-checkbox name="sphflg" label="Surat Pelepasan Hak" id="sphflg"
-                  v-model="pembiayaanBody.sphflg" readonly></v-checkbox>
+                <v-checkbox name="sphflg" label="Surat Pelepasan Hak" id="sphflg" v-model="pembiayaanBody.sphflg"
+                  readonly></v-checkbox>
               </v-col>
               <v-col>
-                <v-checkbox name="kwjbflg" label="Kwitansi Jual Beli" id="kwjbflg"
-                  v-model="pembiayaanBody.kwjbflg" readonly></v-checkbox>
+                <v-checkbox name="kwjbflg" label="Kwitansi Jual Beli" id="kwjbflg" v-model="pembiayaanBody.kwjbflg"
+                  readonly></v-checkbox>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
-                <v-checkbox name="fakturc" label="Form A/Vin" id="fakturc"
-                  v-model="pembiayaanBody.fakturc" readonly></v-checkbox>
+                <v-checkbox name="fakturc" label="Form A/Vin" id="fakturc" v-model="pembiayaanBody.fakturc"
+                  readonly></v-checkbox>
               </v-col>
             </v-row>
 
@@ -336,37 +344,45 @@
           </v-btn>
         </v-card-title>
         <v-card-text>
-          <v-form>
-            <v-autocomplete :items="dealerList" item-title="nama" item-value="noregfas" v-model="selectedDealer"
-              label="Nama Dealer" return-object @update:model-value="async (item) => {
-                const { noregfas } = item
-                await getNopols(noregfas) // get data nomor polisi
-                isNopolDisabled = false // activate field nopol
-                selectedNopol = null // hapus pilihan nopol
-                selectedRO = null // kosongkan RO
-              }"></v-autocomplete>
-            <v-autocomplete :items="nopolList" item-title="nopol" item-value="nopol" v-model="selectedNopol"
-              label="No. Polisi" :disabled="isNopolDisabled" return-object @update:model-value="async (item) => {
-                // console.log(item)
-                const { nodealer, nofas } = item
-                await getRO(nodealer, nofas) // get data RO
-                isRODisabled = false // disable RO
-                selectedRO = null // kosongkan RO
-              }">
-              <!-- <template #item="{ item, props }">
-                <v-list-item v-bind="props">
-                  <v-list-item-title>
-                    {{ item.nofas }} - {{ item.nopol }}
-                  </v-list-item-title>
-                </v-list-item>
-              </template>
-              <template #selection="{ item, index }">
-                <span>{{ item.nofas }} - {{ item.nopol }}</span>
-              </template> -->
-            </v-autocomplete>
-            <v-autocomplete :items="roList" item-title="roke" item-value="roke" v-model="selectedRO" label="RO Ke"
-              :disabled="isRODisabled" @update:model-value="() => { return }"></v-autocomplete>
-          </v-form>
+          <v-container grid-list-sm v-if="loading">
+            <v-progress-circular indeterminate color="primary"></v-progress-circular>
+            <p>Loading data...</p>
+          </v-container>
+          <v-container grid-list-sm>
+            <v-form>
+              <v-autocomplete :items="cabangList" item-title="label" item-value="value" v-model="selectedCabang"
+                label="Daftar Cabang" @update:model-value="onCabangChangePerpanjanganRO()"></v-autocomplete>
+              <v-autocomplete :items="dealerList" item-title="nama" item-value="noregfas" v-model="selectedDealer"
+                label="Nama Dealer" return-object :disabled="isDealerDisabled" @update:model-value="async (item) => {
+                  const { noregfas } = item
+                  await getNopols(noregfas) // get data nomor polisi
+                  isNopolDisabled = false // activate field nopol
+                  selectedNopol = null // hapus pilihan nopol
+                  selectedRO = null // kosongkan RO
+                }"></v-autocomplete>
+              <v-autocomplete :items="nopolList" item-title="nopol" item-value="nopol" v-model="selectedNopol"
+                label="No. Polisi" :disabled="isNopolDisabled" return-object @update:model-value="async (item) => {
+                  // console.log(item)
+                  const { nodealer, nofas } = item
+                  await getRO(nodealer, nofas) // get data RO
+                  isRODisabled = false // disable RO
+                  selectedRO = null // kosongkan RO
+                }">
+                <!-- <template #item="{ item, props }">
+                  <v-list-item v-bind="props">
+                    <v-list-item-title>
+                      {{ item.nofas }} - {{ item.nopol }}
+                    </v-list-item-title>
+                  </v-list-item>
+                </template>
+                <template #selection="{ item, index }">
+                  <span>{{ item.nofas }} - {{ item.nopol }}</span>
+                </template> -->
+              </v-autocomplete>
+              <v-autocomplete :items="roList" item-title="roke" item-value="roke" v-model="selectedRO" label="RO Ke"
+                :disabled="isRODisabled" @update:model-value="() => { return }"></v-autocomplete>
+            </v-form>
+          </v-container>
         </v-card-text>
         <v-card-actions>
           <v-btn color="secondary" @click="async () => {
@@ -393,25 +409,26 @@
           <v-form>
             <v-row>
               <v-col>
-                <v-text-field name="nodealer" label="No. Dealer" id="nodealer"
-                  v-model="odometerBody.nodealer" readonly></v-text-field>
+                <v-text-field name="nodealer" label="No. Dealer" id="nodealer" v-model="odometerBody.nodealer"
+                  readonly></v-text-field>
               </v-col>
               <v-col>
-                <v-text-field name="namadealer" label="Nama Dealer" id="namadealer"
-                  v-model="odometerBody.nmdealer" readonly></v-text-field>
+                <v-text-field name="namadealer" label="Nama Dealer" id="namadealer" v-model="odometerBody.nmdealer"
+                  readonly></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col>
-                <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="odometerBody.nopol" readonly></v-text-field>
+                <v-text-field name="nopol" label="No. Polisi" id="nopol" v-model="odometerBody.nopol"
+                  readonly></v-text-field>
               </v-col>
               <v-col>
-                <v-text-field name="odolama" label="Odometer RO Sebelum" id="odolama"
-                  v-model="odometerBody.odolama" readonly></v-text-field>
+                <v-text-field name="odolama" label="Odometer RO Sebelum" id="odolama" v-model="odometerBody.odolama"
+                  readonly></v-text-field>
               </v-col>
               <v-col>
-                <v-text-field name="odometer" label="Odometer RO Sekarang" id="odometer"
-                  v-model="odometerBody.odometer" readonly></v-text-field>
+                <v-text-field name="odometer" label="Odometer RO Sekarang" id="odometer" v-model="odometerBody.odometer"
+                  readonly></v-text-field>
               </v-col>
             </v-row>
           </v-form>
@@ -500,6 +517,10 @@ import MenuButton from '@/components/MenuButton.vue'
 import router from '@/router'
 import { logout } from '@/helpers/helpers'
 
+const urlString = 'http://localhost:8080'
+
+// const user = JSON.parse(localStorage.getItem('user')) // deklarasi data user login
+
 export default {
   name: 'ImageUpload',
   components: {
@@ -550,6 +571,7 @@ export default {
     const selectedCabang = ref(null) // cabang yang dipilih dari daftar cabang
     const nmDealerSearch = ref(null) // search query untuk list data pembiayaan
     const nopolSearch = ref(null) // search query untuk list data pembiayaan
+    const isDealerDisabled = ref(true) // disable dealer sampai data dealer selesai loading
     const isNopolDisabled = ref(true) // disable nopol kecuali user sudah memilih data dealer
     const isRODisabled = ref(true) // disable RO kecuali user sudah memilih data RO
 
@@ -580,11 +602,16 @@ export default {
     // fetch data dealer
     const getDealers = async (nama = null, kdcab = null) => {
       // dealerDialog.value = true
-      // loading.value = true
+      loading.value = true
 
       try {
-        // Fetch data dealer
-        const response = await axios.post('http://localhost:8080/api/dealer', {
+        // jika user memilih cabang, kirim selected cabang. Jika tidak, maka tidak usah
+        var kdcab = null
+        if (!selectedCabang.value) {
+          kdcab = user.kdcab
+        }
+        // fetch data dealer
+        const response = await axios.post(`${urlString}/api/dealer`, {
           nama,
           kdcab,
         })
@@ -602,7 +629,7 @@ export default {
     const getNopols = async (noregfas = null) => {
       try {
         // Fetch data dealer
-        const response = await axios.post('http://localhost:8080/api/nopol', {
+        const response = await axios.post(`${urlString}/api/nopol`, {
           noregfas,
         })
 
@@ -621,7 +648,7 @@ export default {
         // Fetch data dealer
         // console.log("Noregfas: ", noregfas)
         // console.log("Nofas: ", nofas)
-        const response = await axios.post('http://localhost:8080/api/ro', {
+        const response = await axios.post(`${urlString}/api/ro`, {
           noregfas,
           nofas,
           angsurke,
@@ -643,7 +670,7 @@ export default {
       // console.log(roke)
 
       try {
-        const response = await axios.post('http://localhost:8080/api/odometer', {
+        const response = await axios.post(`${urlString}/api/odometer`, {
           nodealer, // dealer
           nofas,
           roke, // angsuran
@@ -669,7 +696,7 @@ export default {
       // console.log("Dealer Search: " , dealerQuery.value)
       try {
         // Fetch data dealer
-        const response = await axios.post('http://localhost:8080/api/dealer', {
+        const response = await axios.post(`${urlString}/api/dealer`, {
           query: dealerQuery.value
         })
         // const data = await response.json()
@@ -690,7 +717,7 @@ export default {
         noRegFas.value = item.noregfas
         // console.log("NoRegFas: ", noRegFas.value)
 
-        const response = await axios.post('http://localhost:8080/api/pencairan', {
+        const response = await axios.post(`${urlString}/api/pencairan`, {
           noregfas: item.noregfas,
         })
 
@@ -763,7 +790,7 @@ export default {
         loading.value = true
         dialogListPembiayaan.value = true
         // fetch data pembiayaan
-        const response = await axios.post('http://localhost:8080/api/pembiayaan', {
+        const response = await axios.post(`${urlString}/api/pembiayaan`, {
           noregfas: noRegFas.value,
         })
 
@@ -831,8 +858,14 @@ export default {
     // get data cabang
     const getCabang = async () => {
       try {
-        // get data
-        const response = await axios.get('http://localhost:8080/api/cabang')
+
+        const user = JSON.parse(localStorage.getItem('user'))
+
+        console.log("User Id: ", user.userid)
+        // data cabang hanya berdasarkan cabang-cabang sekategori dengan work area user login
+        const response = await axios.post(`${urlString}/api/cabang`, {
+          userid: user.userid
+        })
 
         if (!response.data) {
           console.log("Error! Data cabang gagal di-fetch")
@@ -849,25 +882,29 @@ export default {
     }
 
     // get all data pembiayaan
-    const getAllPembiayaan = async () => {
+    const getAllPembiayaan = async (value = null) => {
       try {
-        listPembiayaan.value = []
+        await getCabang() // get data cabang
+
+        listPembiayaan.value = [] // kosongkan list pembiayaan
 
         loading.value = true
+
         dialogListPembiayaan.value = true
 
-        await getCabang()
-
-        // get data kdcab user login
         const user = JSON.parse(localStorage.getItem('user'))
 
-        // fetch data pembiayaan
-        const response = await axios.post('http://localhost:8080/api/pembiayaan/all', {
-          kdcab: user.kdcab
-        })
+        // ubah selected cabang ke kdcabang hanya jika sebelumnya belum ada
+        if (!selectedCabang.value) {
+          selectedCabang.value = user.kdcab
+        }
 
-        // set kd cabang user sebagai selectedCabang
-        selectedCabang.value = user.kdcab
+        var kdcab = selectedCabang.value
+
+        // fetch data pembiayaan
+        const response = await axios.post(`${urlString}/api/pembiayaan/all`, {
+          kdcab: kdcab
+        })
 
         // simpan daftar data pembiayaan di list
         if (!response.data) throw new Error('No data found!');
@@ -930,7 +967,7 @@ export default {
     const getImages = async (noregfas = null, noupencairan = null, nofas = null, roke = null, type = '1') => {
 
       // fetch data foto
-      const resFoto = await axios.post('http://localhost:8080/api/images', {
+      const resFoto = await axios.post(`${urlString}/api/images`, {
         noregfas,
         noupencairan,
         nofas,
@@ -970,7 +1007,7 @@ export default {
         if (result.isConfirmed) {
           // 2 | jalankan proses mendelete gambar jika user memang memilih untuk mendelete gambar
           try {
-            const res = await axios.post('http://localhost:8080/api/images/delete', {
+            const res = await axios.post(`${urlString}/api/images/delete`, {
               nodealer,
               noupencairan,
               nofas,
@@ -1074,7 +1111,7 @@ export default {
     // API update data pembiayaan
     async function updatePembiayaan() {
       try {
-        const response = await axios.post("http://localhost:8080/api/pembiayaan/updatevalue: ",
+        const response = await axios.post(`${urlString}/api/pembiayaan/updatevalue: `,
           {
             tgltrn: pembiayaanBody.value.tgltrn,
             jnsproduk: pembiayaanBody.value.jnsproduk,
@@ -1168,7 +1205,7 @@ export default {
 
       // 5 | request http
       try {
-        const response = await axios.post("http://localhost:8080/api/uploadbulk", formData, {
+        const response = await axios.post(`${urlString}/api/uploadbulk`, formData, {
           "Content-Type": "multipart/form-data",
         });
 
@@ -1246,7 +1283,7 @@ export default {
       }
 
       try {
-        const response = await axios.post("http://localhost:8080/api/uploadbulk2", JSON.stringify(payload), {
+        const response = await axios.post(`${urlString}/api/uploadbulk2`, JSON.stringify(payload), {
           'Content-Type': 'application/json',
         });
         // const result = await response.json();
@@ -1278,7 +1315,7 @@ export default {
 
       try {
         // Fetch data dealer
-        const response = await axios.post('http://localhost:8080/api/dokimg', {
+        const response = await axios.post(`${urlString}/api/dokimg`, {
           tipe,
         })
 
@@ -1318,16 +1355,29 @@ export default {
       // console.log("Filtered Values: ", filteredPembiayaan)
     }
 
-    async function openDialogPerpanjanganRO() {
-      // console.log("SAYA DIKLIK")
-      // open dialog
-      dialogPerpanjanganRO.value = true
+    async function onCabangChange() {
+      await getAllPembiayaan()
+    }
 
-      // use token
+    async function onCabangChangePerpanjanganRO() {
+      await getDealers(null) // ubah data dealers
+
+    }
+
+    async function openDialogPerpanjanganRO() {
+      await getCabang() // get data cabang
+
+      dialogPerpanjanganRO.value = true
+      loading.value = true
+      isDealerDisabled.value = true
+
       const user = JSON.parse(localStorage.getItem('user'))
 
       // get data dealer
-      await getDealers(null, user.kdcab)
+      await getDealers(null)
+
+      isDealerDisabled.value = false
+      loading.value = false
 
     }
 
@@ -1387,6 +1437,7 @@ export default {
       selectedCabang,
       nmDealerSearch,
       nopolSearch,
+      isDealerDisabled,
       isNopolDisabled,
       isRODisabled,
       getDealers,
@@ -1409,6 +1460,8 @@ export default {
       getPerpanjanganROImages,
       getDokumentasiImage,
       onPembiayaanParameterChange,
+      onCabangChange,
+      onCabangChangePerpanjanganRO,
       requiredRule,
       toggleDialog
     }

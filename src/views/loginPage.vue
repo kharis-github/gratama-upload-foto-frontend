@@ -49,18 +49,18 @@ export default {
                         text: `Selamat datang ${response.data.user.username}!`,
                         // footer: '<a href="#">Why do I have this issue?</a>'
                     }).then((result) => {
+                        const token = response.data.token // data token
+                        const user = response.data.user // data user
+
+                        // insert token dan data persistent
+                        localStorage.setItem('token', token)
+                        localStorage.setItem('user', JSON.stringify(user))
+
+                        setAutoLogout(token) // setting auto logout expiration token
+
                         // REDIRECT
                         router.push('/')
                     });
-
-                    const token = response.data.token // data token
-                    const user = response.data.user // data user
-
-                    // insert token dan data persistent
-                    localStorage.setItem('token', token)
-                    localStorage.setItem('user', JSON.stringify(user))
-
-                    setAutoLogout(token) // setting auto logout expiration token
                 }
 
             } catch (error) {
@@ -79,6 +79,7 @@ export default {
             const expTime = getTokenExpiration(token);
             const now = Date.now();
             const timeout = expTime - now;
+            console.log("Timeout: ", timeout)
 
             if (timeout > 0) {
                 setTimeout(() => {
