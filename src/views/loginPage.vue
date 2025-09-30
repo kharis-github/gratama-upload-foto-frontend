@@ -36,7 +36,7 @@ export default {
 
         const submitLogin = async () => {
             try {
-                const response = await axios.post('http://localhost:8080/api/login', {
+                const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/login`, {
                     userid: userid.value,
                     password: password.value,
                 })

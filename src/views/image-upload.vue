@@ -611,7 +611,7 @@ export default {
           kdcab = user.kdcab
         }
         // fetch data dealer
-        const response = await axios.post(`${urlString}/api/dealer`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/dealer`, {
           nama,
           kdcab,
         })
@@ -629,7 +629,7 @@ export default {
     const getNopols = async (noregfas = null) => {
       try {
         // Fetch data dealer
-        const response = await axios.post(`${urlString}/api/nopol`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/nopol`, {
           noregfas,
         })
 
@@ -648,7 +648,7 @@ export default {
         // Fetch data dealer
         // console.log("Noregfas: ", noregfas)
         // console.log("Nofas: ", nofas)
-        const response = await axios.post(`${urlString}/api/ro`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/ro`, {
           noregfas,
           nofas,
           angsurke,
@@ -670,7 +670,7 @@ export default {
       // console.log(roke)
 
       try {
-        const response = await axios.post(`${urlString}/api/odometer`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/odometer`, {
           nodealer, // dealer
           nofas,
           roke, // angsuran
@@ -696,7 +696,7 @@ export default {
       // console.log("Dealer Search: " , dealerQuery.value)
       try {
         // Fetch data dealer
-        const response = await axios.post(`${urlString}/api/dealer`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/dealer`, {
           query: dealerQuery.value
         })
         // const data = await response.json()
@@ -717,7 +717,7 @@ export default {
         noRegFas.value = item.noregfas
         // console.log("NoRegFas: ", noRegFas.value)
 
-        const response = await axios.post(`${urlString}/api/pencairan`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/pencairan`, {
           noregfas: item.noregfas,
         })
 
@@ -790,7 +790,7 @@ export default {
         loading.value = true
         dialogListPembiayaan.value = true
         // fetch data pembiayaan
-        const response = await axios.post(`${urlString}/api/pembiayaan`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/pembiayaan`, {
           noregfas: noRegFas.value,
         })
 
@@ -863,7 +863,7 @@ export default {
 
         console.log("User Id: ", user.userid)
         // data cabang hanya berdasarkan cabang-cabang sekategori dengan work area user login
-        const response = await axios.post(`${urlString}/api/cabang`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/cabang`, {
           userid: user.userid
         })
 
@@ -902,7 +902,7 @@ export default {
         var kdcab = selectedCabang.value
 
         // fetch data pembiayaan
-        const response = await axios.post(`${urlString}/api/pembiayaan/all`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/pembiayaan/all`, {
           kdcab: kdcab
         })
 
@@ -967,7 +967,7 @@ export default {
     const getImages = async (noregfas = null, noupencairan = null, nofas = null, roke = null, type = '1') => {
 
       // fetch data foto
-      const resFoto = await axios.post(`${urlString}/api/images`, {
+      const resFoto = await axios.post(`${import.meta.env.VITE_API_BASE}/api/images`, {
         noregfas,
         noupencairan,
         nofas,
@@ -1007,7 +1007,7 @@ export default {
         if (result.isConfirmed) {
           // 2 | jalankan proses mendelete gambar jika user memang memilih untuk mendelete gambar
           try {
-            const res = await axios.post(`${urlString}/api/images/delete`, {
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE}/api/images/delete`, {
               nodealer,
               noupencairan,
               nofas,
@@ -1111,7 +1111,7 @@ export default {
     // API update data pembiayaan
     async function updatePembiayaan() {
       try {
-        const response = await axios.post(`${urlString}/api/pembiayaan/updatevalue: `,
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/pembiayaan/updatevalue: `,
           {
             tgltrn: pembiayaanBody.value.tgltrn,
             jnsproduk: pembiayaanBody.value.jnsproduk,
@@ -1205,7 +1205,7 @@ export default {
 
       // 5 | request http
       try {
-        const response = await axios.post(`${urlString}/api/uploadbulk`, formData, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/uploadbulk`, formData, {
           "Content-Type": "multipart/form-data",
         });
 
@@ -1283,7 +1283,7 @@ export default {
       }
 
       try {
-        const response = await axios.post(`${urlString}/api/uploadbulk2`, JSON.stringify(payload), {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/uploadbulk2`, JSON.stringify(payload), {
           'Content-Type': 'application/json',
         });
         // const result = await response.json();
@@ -1315,7 +1315,7 @@ export default {
 
       try {
         // Fetch data dealer
-        const response = await axios.post(`${urlString}/api/dokimg`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/dokimg`, {
           tipe,
         })
 
