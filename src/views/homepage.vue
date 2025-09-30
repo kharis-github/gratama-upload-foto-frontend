@@ -23,7 +23,7 @@
       }
     },
     mounted() {
-      axios.get('http://localhost:8080/api/message')
+      axios.get(`${import.meta.env.VITE_API_BASE}/api/message`)
         .then(res => {
           // this.message = res.data.message
           console.log("Response: ", res.data)
