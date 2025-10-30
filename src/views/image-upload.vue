@@ -359,8 +359,10 @@
                   isNopolDisabled = false // activate field nopol
                   selectedNopol = null // hapus pilihan nopol
                   selectedRO = null // kosongkan RO
+                  roList = [] // kosongkan ro list
+                  isRODisabled = true // disable ro list
                 }"></v-autocomplete>
-              <v-autocomplete :items="nopolList" item-title="nopol" item-value="nopol" v-model="selectedNopol"
+              <v-select :items="nopolList" item-title="nopol" item-value="nopol" v-model="selectedNopol"
                 label="No. Polisi" :disabled="isNopolDisabled" return-object @update:model-value="async (item) => {
                   // console.log(item)
                   const { nodealer, nofas } = item
@@ -378,9 +380,9 @@
                 <template #selection="{ item, index }">
                   <span>{{ item.nofas }} - {{ item.nopol }}</span>
                 </template> -->
-              </v-autocomplete>
-              <v-autocomplete :items="roList" item-title="roke" item-value="roke" v-model="selectedRO" label="RO Ke"
-                :disabled="isRODisabled" @update:model-value="() => { return }"></v-autocomplete>
+              </v-select>
+              <v-select :items="roList" item-title="roke" item-value="roke" v-model="selectedRO" label="RO Ke"
+                :disabled="isRODisabled" @update:model-value="() => { return }"></v-select>
             </v-form>
           </v-container>
         </v-card-text>
@@ -591,7 +593,13 @@ export default {
         pembiayaanBody.value = {}
       } else if (form === 'perpanjangan-ro') {
         dialogPerpanjanganRO.value = false // hapus dialog
-        selectedNopol.value = null // hilangkan pilihan nopol
+        // remove selected value
+        selectedDealer.value = null
+        selectedNopol.value = null
+        selectedRO.value = null
+        // disable fields
+        isNopolDisabled.value = true
+        isRODisabled.value = true
       } else if (form === 'odometer-details') {
         dialogOdometer.value = false // hapus dialog odometer details
       } else if (form === 'upload-perpanjangan-ro') {
@@ -604,14 +612,25 @@ export default {
       // dealerDialog.value = true
       loading.value = true
 
+
       try {
+        const user = JSON.parse(localStorage.getItem('user'))
+
+
         // jika user memilih cabang, kirim selected cabang. Jika tidak, maka tidak usah
-        var kdcab = null
+        // var kdcab = null
+        // if (!selectedCabang.value) {
+        //   kdcab = user.kdcab
+        // }
+
         if (!selectedCabang.value) {
-          kdcab = user.kdcab
+          selectedCabang.value = user.kdcab
         }
-        // fetch data dealer
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/dealer`, {
+
+        var kdcab = selectedCabang.value
+
+        // fetch data dealer		
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/dealer`, {
           nama,
           kdcab,
         })
@@ -629,7 +648,7 @@ export default {
     const getNopols = async (noregfas = null) => {
       try {
         // Fetch data dealer
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/nopol`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/nopol`, {
           noregfas,
         })
 
@@ -648,7 +667,7 @@ export default {
         // Fetch data dealer
         // console.log("Noregfas: ", noregfas)
         // console.log("Nofas: ", nofas)
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/ro`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/ro`, {
           noregfas,
           nofas,
           angsurke,
@@ -670,7 +689,7 @@ export default {
       // console.log(roke)
 
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/odometer`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/odometer`, {
           nodealer, // dealer
           nofas,
           roke, // angsuran
@@ -696,7 +715,7 @@ export default {
       // console.log("Dealer Search: " , dealerQuery.value)
       try {
         // Fetch data dealer
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/dealer`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/dealer`, {
           query: dealerQuery.value
         })
         // const data = await response.json()
@@ -717,7 +736,7 @@ export default {
         noRegFas.value = item.noregfas
         // console.log("NoRegFas: ", noRegFas.value)
 
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/pencairan`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/pencairan`, {
           noregfas: item.noregfas,
         })
 
@@ -790,7 +809,7 @@ export default {
         loading.value = true
         dialogListPembiayaan.value = true
         // fetch data pembiayaan
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/pembiayaan`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/pembiayaan`, {
           noregfas: noRegFas.value,
         })
 
@@ -863,7 +882,7 @@ export default {
 
         console.log("User Id: ", user.userid)
         // data cabang hanya berdasarkan cabang-cabang sekategori dengan work area user login
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/cabang`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/cabang`, {
           userid: user.userid
         })
 
@@ -902,7 +921,7 @@ export default {
         var kdcab = selectedCabang.value
 
         // fetch data pembiayaan
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/pembiayaan/all`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/pembiayaan/all`, {
           kdcab: kdcab
         })
 
@@ -967,7 +986,7 @@ export default {
     const getImages = async (noregfas = null, noupencairan = null, nofas = null, roke = null, type = '1') => {
 
       // fetch data foto
-      const resFoto = await axios.post(`${import.meta.env.VITE_API_BASE}/api/images`, {
+      const resFoto = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/images`, {
         noregfas,
         noupencairan,
         nofas,
@@ -1007,7 +1026,7 @@ export default {
         if (result.isConfirmed) {
           // 2 | jalankan proses mendelete gambar jika user memang memilih untuk mendelete gambar
           try {
-            const res = await axios.post(`${import.meta.env.VITE_API_BASE}/api/images/delete`, {
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/images/delete`, {
               nodealer,
               noupencairan,
               nofas,
@@ -1111,7 +1130,7 @@ export default {
     // API update data pembiayaan
     async function updatePembiayaan() {
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/pembiayaan/updatevalue: `,
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/pembiayaan/updatevalue: `,
           {
             tgltrn: pembiayaanBody.value.tgltrn,
             jnsproduk: pembiayaanBody.value.jnsproduk,
@@ -1205,7 +1224,7 @@ export default {
 
       // 5 | request http
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/uploadbulk`, formData, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/uploadbulk`, formData, {
           "Content-Type": "multipart/form-data",
         });
 
@@ -1283,7 +1302,7 @@ export default {
       }
 
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/uploadbulk2`, JSON.stringify(payload), {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/uploadbulk2`, JSON.stringify(payload), {
           'Content-Type': 'application/json',
         });
         // const result = await response.json();
@@ -1315,7 +1334,7 @@ export default {
 
       try {
         // Fetch data dealer
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE}/api/dokimg`, {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/dokimg`, {
           tipe,
         })
 
@@ -1361,7 +1380,12 @@ export default {
 
     async function onCabangChangePerpanjanganRO() {
       await getDealers(null) // ubah data dealers
-
+      // TODO: interaction
+      selectedDealer.value = null
+      selectedNopol.value = null
+      isNopolDisabled.value = true
+      selectedRO.value = null
+      isRODisabled.value = true
     }
 
     async function openDialogPerpanjanganRO() {

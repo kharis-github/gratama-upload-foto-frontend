@@ -22,7 +22,7 @@
         message: ''
       }
     },
-    mounted() {
+    mounted() {	
       axios.get(`${import.meta.env.VITE_API_BASE}/api/message`)
         .then(res => {
           // this.message = res.data.message
