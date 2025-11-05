@@ -1224,6 +1224,15 @@ export default {
 
       // 5 | request http
       try {
+        Swal.fire({
+          title: 'Mengunggah gambar...',
+          text: 'Harap tunggu, sedang dalam proses upload',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading()
+          }
+        })
+
         const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/uploadbulk`, formData, {
           "Content-Type": "multipart/form-data",
         });
