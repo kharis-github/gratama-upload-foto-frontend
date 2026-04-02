@@ -8,7 +8,13 @@
                 <v-card-text>
                     <v-form @submit.prevent="submitLogin">
                         <v-text-field v-model="userid" label="User ID" />
-                        <v-text-field v-model="password" label="Password" type="password" />
+                        <v-text-field
+                            v-model="password"
+                            :type="showPassword ? 'text' : 'password'"
+                            label="Password"
+                            :append-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                            @click:append="togglePasswordVisibility"
+                        />
                     </v-form>
                 </v-card-text>
                 <v-card-actions>
@@ -33,6 +39,11 @@ export default {
     setup() {
         const userid = ref('')
         const password = ref('')
+        const showPassword = ref(false)
+
+        const togglePasswordVisibility = () => {
+            showPassword.value = !showPassword.value
+        }
 
         const submitLogin = async () => {
             try {
@@ -96,7 +107,9 @@ export default {
         return {
             userid,
             password,
+            showPassword,
             submitLogin,
+            togglePasswordVisibility,
             setAutoLogout,
             getTokenExpiration
         }

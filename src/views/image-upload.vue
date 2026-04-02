@@ -985,6 +985,8 @@ export default {
     // get data image
     const getImages = async (noregfas = null, noupencairan = null, nofas = null, roke = null, type = '1') => {
 
+      console.log('[DEBUG] Noregfas: ', noregfas, ' Noupencairan: ', noupencairan, ' Nofas: ', nofas, ' Roke: ', roke, ' Type: ', type);
+      
       // fetch data foto
       const resFoto = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/images`, {
         noregfas,
