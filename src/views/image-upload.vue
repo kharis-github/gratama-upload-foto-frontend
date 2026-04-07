@@ -1,5 +1,18 @@
 <template>
   <v-container>
+    <!-- loading window; ditampilkan saat ada proses API call -->
+    <v-dialog v-model="apiLoading" persistent max-width="320" attach="body" overlay-color="#00000066"
+      class="api-loading-dialog">
+      <v-card class="text-center pa-4">
+        <!-- <v-progress-circular indeterminate color="primary" size="60" width="6"></v-progress-circular> -->
+         <div class="mx-auto">
+           <VueSpinnerRing size="80" color="#00afff"/>
+         </div>
+        <div class="mt-4">
+          <span class="subtitle-1">{{ loadingMessage }}</span>
+        </div>
+      </v-card>
+    </v-dialog>
     <v-row>
       <v-col>
         <v-btn color="info" @click="logout">Logout</v-btn>
@@ -518,6 +531,7 @@ import ImageWithDelete from '@/components/ImageWithDelete.vue'
 import MenuButton from '@/components/MenuButton.vue'
 import router from '@/router'
 import { logout } from '@/helpers/helpers'
+import { VueSpinnerRing } from 'vue3-spinners'
 
 const urlString = 'http://localhost:8080'
 
@@ -528,6 +542,7 @@ export default {
   components: {
     MenuButton, // tombol pada menu
     ImageWithDelete, // untuk penampilan gambar upload, yang dapat di hapus,
+    VueSpinnerRing, // loading spinner
   },
   setup() {
     const noRegFas = ref(undefined) // nomor dealer
@@ -536,6 +551,9 @@ export default {
     const dialogPencairan = ref(false)
     const pencairanBody = ref({})
     const loading = ref(false)
+    const apiLoading = ref(false)
+    const apiLoadingCount = ref(0)
+    const loadingMessage = ref('')
     const dealerList = ref([]) // data dealer
     const nopolList = ref([]) // data nomor polisi
     const roList = ref([]) // daftar RO
@@ -607,9 +625,23 @@ export default {
       }
     }
 
+    const startApiLoading = (text = 'Memuat data...') => {
+      apiLoadingCount.value += 1
+      apiLoading.value = true
+      loadingMessage.value = text
+    }
+
+    const stopApiLoading = () => {
+      apiLoadingCount.value = Math.max(0, apiLoadingCount.value - 1)
+      if (apiLoadingCount.value === 0) {
+        apiLoading.value = false
+        loadingMessage.value = ''
+      }
+    }
+
     // fetch data dealer
     const getDealers = async (nama = null, kdcab = null) => {
-      // dealerDialog.value = true
+      startApiLoading('Mengambil data dealer...')
       loading.value = true
 
 
@@ -641,11 +673,13 @@ export default {
         dealerList.value = []
       } finally {
         loading.value = false
+        stopApiLoading()
       }
     }
 
     // fetch data nomor polisi
     const getNopols = async (noregfas = null) => {
+      startApiLoading('Mengambil daftar nomor polisi...')
       try {
         // Fetch data dealer
         const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/nopol`, {
@@ -658,11 +692,13 @@ export default {
         nopolList.value = []
       } finally {
         loading.value = false
+        stopApiLoading()
       }
     }
 
     // ambil data RO
     const getRO = async (noregfas = null, nofas = null, angsurke = null) => {
+      startApiLoading('Mengambil data RO...')
       try {
         // Fetch data dealer
         // console.log("Noregfas: ", noregfas)
@@ -679,11 +715,13 @@ export default {
         roList.value = []
       } finally {
         loading.value = false
+        stopApiLoading()
       }
     }
 
     // fetch data odometer
     const getOdometer = async (nodealer = null, nofas = null, roke = null) => {
+      startApiLoading('Mengambil data odometer...')
       // console.log(nodealer)
       // console.log(nofas)
       // console.log(roke)
@@ -704,6 +742,7 @@ export default {
         odometerBody.value = null
       } finally {
         loading.value = false
+        stopApiLoading()
       }
 
     }
@@ -712,6 +751,7 @@ export default {
 
     // get data dealer berdasarkan inputan user
     const dealerSearch = async () => {
+      startApiLoading('Mencari dealer...')
       // console.log("Dealer Search: " , dealerQuery.value)
       try {
         // Fetch data dealer
@@ -725,11 +765,13 @@ export default {
         dealerList.value = []
       } finally {
         loading.value = false
+        stopApiLoading()
       }
     }
 
     // get data pencairan
     const onRowClickPencairan = async (item) => {
+      startApiLoading('Mengambil detail pencairan...')
       try {
 
         // simpan noregfas yang dipilih
@@ -783,6 +825,7 @@ export default {
         console.error('Gagal fetch data:', err)
       } finally {
         loading.value = false;
+        stopApiLoading()
       }
     }
 
@@ -805,6 +848,7 @@ export default {
 
     // get data pembiayaan
     const getPembiayaan = async () => {
+      startApiLoading('Mengambil data pembiayaan...')
       try {
         loading.value = true
         dialogListPembiayaan.value = true
@@ -871,11 +915,13 @@ export default {
         console.error('Gagal fetch data pembiayaan:', error)
       } finally {
         loading.value = false;
+        stopApiLoading()
       }
     }
 
     // get data cabang
     const getCabang = async () => {
+      startApiLoading('Mengambil daftar cabang...')
       try {
 
         const user = JSON.parse(localStorage.getItem('user'))
@@ -897,11 +943,14 @@ export default {
         }))
       } catch (error) {
 
+      } finally {
+        stopApiLoading()
       }
     }
 
     // get all data pembiayaan
     const getAllPembiayaan = async (value = null) => {
+      startApiLoading('Mengambil semua data pembiayaan...')
       try {
         await getCabang() // get data cabang
 
@@ -979,36 +1028,44 @@ export default {
         console.error('Gagal fetch data pembiayaan:', error)
       } finally {
         loading.value = false;
+        stopApiLoading()
       }
     }
 
     // get data image
     const getImages = async (noregfas = null, noupencairan = null, nofas = null, roke = null, type = '1') => {
+      startApiLoading('Mengambil data gambar...')
+      try {
+        console.log('[DEBUG] Noregfas: ', noregfas, ' Noupencairan: ', noupencairan, ' Nofas: ', nofas, ' Roke: ', roke, ' Type: ', type);
 
-      console.log('[DEBUG] Noregfas: ', noregfas, ' Noupencairan: ', noupencairan, ' Nofas: ', nofas, ' Roke: ', roke, ' Type: ', type);
-      
-      // fetch data foto
-      const resFoto = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/images`, {
-        noregfas,
-        noupencairan,
-        nofas,
-        roke,
-        type,
-      })
-
-      // DEBUG: json response
-      console.log("Data Foto", resFoto)
-
-      // simpan data image di state dokimg, agar dapat di-preview
-      resFoto.data.forEach(img => {
-        dokimg.value.forEach(item => {
-          if (item.kode === img.kode) {
-            item.src = img.image
-          }
+        // fetch data foto
+        const resFoto = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/images`, {
+          noregfas,
+          noupencairan,
+          nofas,
+          roke,
+          type,
         })
-      })
 
-      return resFoto.data
+        // DEBUG: json response
+        console.log("Data Foto", resFoto)
+
+        // simpan data image di state dokimg, agar dapat di-preview
+        resFoto.data.forEach(img => {
+          dokimg.value.forEach(item => {
+            if (item.kode === img.kode) {
+              item.src = img.image
+            }
+          })
+        })
+
+        return resFoto.data
+      } catch (error) {
+        console.error('Gagal fetch data gambar:', error)
+        return []
+      } finally {
+        stopApiLoading()
+      }
     }
 
     // delete gambar
@@ -1342,7 +1399,7 @@ export default {
 
     // API daftar dokumentasi image
     async function getDokumentasiImage(tipe = 'P') {
-
+      startApiLoading('Mengambil daftar dokumentasi gambar...')
       try {
         // Fetch data dealer
         const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/dokimg`, {
@@ -1357,6 +1414,7 @@ export default {
         dokimg.value = []
       } finally {
         loading.value = false
+        stopApiLoading()
       }
     }
 
@@ -1443,6 +1501,8 @@ export default {
       dialogPencairan,
       pencairanBody,
       loading,
+      apiLoading,
+      loadingMessage,
       dealerList,
       nopolList,
       roList,
@@ -1507,6 +1567,13 @@ export default {
 <style>
 .swal-top-z {
   z-index: 9999 !important;
+}
+
+.api-loading-dialog,
+.api-loading-dialog .v-overlay__content,
+.api-loading-dialog .v-overlay__scrim,
+.api-loading-dialog .v-card {
+  z-index: 99999 !important;
 }
 
 .text-red {
