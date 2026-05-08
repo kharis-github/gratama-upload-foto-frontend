@@ -5,9 +5,9 @@
       class="api-loading-dialog">
       <v-card class="text-center pa-4">
         <!-- <v-progress-circular indeterminate color="primary" size="60" width="6"></v-progress-circular> -->
-         <div class="mx-auto">
-           <VueSpinnerRing size="80" color="#00afff"/>
-         </div>
+        <div class="mx-auto">
+          <VueSpinnerRing size="80" color="#00afff" />
+        </div>
         <div class="mt-4">
           <span class="subtitle-1">{{ loadingMessage }}</span>
         </div>
@@ -315,8 +315,8 @@
             <v-form @submit.prevent="uploadImage('1', ['detail-unit', 'pencairan'])">
               <v-row>
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
-                  <v-file-input v-model="field.file" accept="image/*" :name="field.kode" prepend-icon="mdi-image"
-                    @change="onImageChange(index)" variant="outlined"
+                  <v-file-input v-model="field.file" accept="image/jpeg" :name="field.kode" prepend-icon="mdi-image"
+                    @change="onImageChange(index, ['pencairan', 'detail-unit'])" variant="outlined"
                     :rules="field.flag === 'M' && !field.src ? [requiredRule] : []">
                     <template v-slot:label>
                       <span :class="(field.flag === 'M' && !field.src) ? `text-red` : ``">{{ field.flag === 'M' ? `*
@@ -451,8 +451,8 @@
             <v-form @submit.prevent="uploadImage('2', ['perpanjangan-ro', 'odometer'])">
               <v-row>
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
-                  <v-file-input v-model="field.file" accept="image/*" :name="field.kode" prepend-icon="mdi-image"
-                    @change="onImageChange(index)" variant="outlined"
+                  <v-file-input v-model="field.file" accept="image/jpeg" :name="field.kode" prepend-icon="mdi-image"
+                    @change="onImageChange(index, ['perpanjangan-ro', 'odometer'])" variant="outlined"
                     :rules="field.flag === 'M' && !field.src ? [requiredRule] : []">
                     <template v-slot:label>
                       <span :class="(field.flag === 'M' && !field.src) ? `text-red` : ``">{{ field.flag === 'M' ? `*
@@ -489,7 +489,7 @@
             <v-form @submit.prevent="uploadImage('2')">
               <v-row>
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
-                  <v-file-input v-model="field.file" accept="image/*" :name="field.kode" prepend-icon="mdi-image"
+                  <v-file-input v-model="field.file" accept="image/jpeg" :name="field.kode" prepend-icon="mdi-image"
                     @change="onImageChange(index)" variant="outlined"
                     :rules="field.flag === 'M' && !field.src ? [requiredRule] : []">
                     <template>
@@ -595,7 +595,7 @@ export default {
     const isNopolDisabled = ref(true) // disable nopol kecuali user sudah memilih data dealer
     const isRODisabled = ref(true) // disable RO kecuali user sudah memilih data RO
 
-    // clear dialog
+    // menutup dialog dan mengosongkan body dialog
     const closeDialog = (form) => {
       if (form === 'daftar-data') {
         dealerDialog.value = false
@@ -782,8 +782,6 @@ export default {
           noregfas: item.noregfas,
         })
 
-        // TODO: notifikasi user jika tidak ada data pencairan
-
         if (response.data.length <= 0) {
           dealerDialog.value = false
           Swal.fire({
@@ -799,7 +797,7 @@ export default {
             dealerDialog.value = true
           })
         } else {
-          const result = response.data[0]; // TODO: pencairan dapat lebih dari satu, integrasi
+          const result = response.data[0];
 
           // simpan data pencairan di pencairanBody
           pencairanBody.value = {
@@ -1047,7 +1045,6 @@ export default {
           type,
         })
 
-        // DEBUG: json response
         console.log("Data Foto", resFoto)
 
         // simpan data image di state dokimg, agar dapat di-preview
@@ -1129,7 +1126,7 @@ export default {
     }
 
     // handler perubahan gambar upload pada form penginputan gambar
-    const onImageChange = (index) => {
+    const onImageChange = (index, dialogList = []) => {
       // data sekarang disimpan di `dokimg`
 
       // TODO: cari panjang dan tinggi dari image
@@ -1138,6 +1135,24 @@ export default {
 
       const file = dokimg.value[index].file;
       if (file && file instanceof File) {
+        // validasi ekstensi file
+        const allowedExtensions = ['jpeg', 'jpg'];
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        if (!allowedExtensions.includes(fileExtension)) {
+          // TODO: sembunyikan dialog saat menampilkan pesan error
+          toggleDialog(dialogList) // me-noggle dialog yang ditampilkan pada rantaian dialog ini
+          Swal.fire({
+            icon: 'error',
+            title: 'File Tidak Valid',
+            text: 'Hanya file gambar dengan format .jpeg atau .jpg yang diperbolehkan.',
+          }).then((result) => {
+            toggleDialog(dialogList)
+          });;
+          dokimg.value[index].file = null;
+          dokimg.value[index].src = null;
+          return;
+        }
+
         const reader = new FileReader()
         reader.onload = e => {
           // // mencari panjang dan lebar dari gambar
@@ -1166,6 +1181,19 @@ export default {
 
       const file = dokimg.value[index].file;
       if (file && file instanceof File) {
+        // validasi ekstensi file
+        const allowedExtensions = ['jpeg', 'jpg'];
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        if (!allowedExtensions.includes(fileExtension)) {
+          Swal.fire({
+            icon: 'error',
+            title: 'File Tidak Valid',
+            text: 'Hanya file gambar dengan format .jpeg atau .jpg yang diperbolehkan.',
+          });
+          dokimg.value[index].file = null;
+          dokimg.value[index].src = null;
+          return;
+        }
 
         const reader = new FileReader()
 
@@ -1277,7 +1305,7 @@ export default {
         formData.append('roke', selectedRO.value) // roke
       }
       formData.append('nourut', pembiayaanBody.value.nou) // nomor urut gambar
-      formData.append('flag', '1') // TODO: isi flag
+      formData.append('flag', '1')
       formData.append('kode', pembiayaanBody.value.kode) // kode pembiayaan
       formData.append('type', type) // tipe
 
@@ -1356,7 +1384,7 @@ export default {
       formData.append('nodealer', pencairanBody.value.nodealer) // nomor dealer
       formData.append('noupencairan', pencairanBody.value.nou)
       formData.append('nourut', pembiayaanBody.value.nou)
-      formData.append('flag', '1') // TODO: isi flag
+      formData.append('flag', '1')
       formData.append('kode', pembiayaanBody.value.kode) // kode pembiayaan
 
       console.log("Form Data: ", formData)
@@ -1418,7 +1446,6 @@ export default {
       }
     }
 
-    // TODO: mengubah data pembiayaan berdasarkan search query
     function onPembiayaanParameterChange() {
       // buat array of filter berdasarkan nilai yang ada
       const filters = []
@@ -1449,7 +1476,6 @@ export default {
 
     async function onCabangChangePerpanjanganRO() {
       await getDealers(null) // ubah data dealers
-      // TODO: interaction
       selectedDealer.value = null
       selectedNopol.value = null
       isNopolDisabled.value = true
@@ -1476,6 +1502,7 @@ export default {
 
     const requiredRule = v => !!v || 'Field ini wajib diisi!'
 
+    // menampilkan dialog
     const toggleDialog = function (fields = []) {
       if (fields.length <= 0) {
         return
