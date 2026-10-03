@@ -312,7 +312,7 @@
 
           </v-form>
           <v-container grid-list-md>
-            <v-form @submit.prevent="uploadImage('1', ['detail-unit', 'pencairan'])">
+            <v-form @submit.prevent="uploadImage('1')">
               <v-row>
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
                   <v-file-input v-model="field.file" accept="image/*" :name="field.kode" prepend-icon="mdi-image"
@@ -337,6 +337,7 @@
               </v-row>
               <v-btn color="primary" type="submit">Upload Foto</v-btn>
             </v-form>
+            
           </v-container>
         </v-card-text>
         <!-- <v-card-actions>
@@ -448,7 +449,7 @@
             </v-row>
           </v-form>
           <v-container grid-list-sm>
-            <v-form @submit.prevent="uploadImage('2', ['perpanjangan-ro', 'odometer'])">
+            <v-form @submit.prevent="uploadImage('2')">
               <v-row>
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
                   <v-file-input v-model="field.file" accept="image/*" :name="field.kode" prepend-icon="mdi-image"
@@ -465,6 +466,9 @@
                 </v-col>
               </v-row>
               <v-btn color="primary" type="submit">Upload Foto</v-btn>
+              <!-- <v-btn class="ml-2" color="error" variant="outlined" type="button" @click="selectedRO = null">
+                Delete RO
+              </v-btn> -->
             </v-form>
           </v-container>
         </v-card-text>
@@ -524,13 +528,15 @@
 </template>
 
 <script>
-import axios from 'axios'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import Swal from 'sweetalert2'
 import ImageWithDelete from '@/components/ImageWithDelete.vue'
 import MenuButton from '@/components/MenuButton.vue'
 import router from '@/router'
 import { logout } from '@/helpers/helpers'
+import { mapPembiayaan } from '@/helpers/pembiayaan'
+import { useDocumentImages } from '@/composables/useDocumentImages'
+import { imageUploadModel } from '@/models/imageUploadModel'
 import { VueSpinnerRing } from 'vue3-spinners'
 
 const urlString = 'http://localhost:8080'
@@ -584,7 +590,6 @@ export default {
     const imageList = ref([]) // uploaded images
     const base64Image = ref(null) // gambar upload format base64
     const previewUrl = ref(null)
-    const dokimg = ref([]) // daftar jenis dokumentasi image
     const message = ref('')
     const error = ref('')
     const cabangList = ref([]) // daftar cabang
@@ -639,6 +644,40 @@ export default {
       }
     }
 
+    const closeOpenDialogs = async () => {
+      const dialogRefs = [
+        apiLoading,
+        dealerDialog,
+        dialogPencairan,
+        dialogListPembiayaan,
+        dialogPembiayaan,
+        dialogPilihPembiayaan,
+        dialogPerpanjanganRO,
+        dialogOdometer,
+        dialogUploadPerpanjanganRO,
+      ]
+      const openDialogs = dialogRefs.filter((dialog) => dialog.value)
+
+      openDialogs.forEach((dialog) => {
+        dialog.value = false
+      })
+      await nextTick()
+
+      return () => {
+        openDialogs.forEach((dialog) => {
+          if (dialog !== apiLoading || apiLoadingCount.value > 0) {
+            dialog.value = true
+          }
+        })
+      }
+    }
+
+    const { dokimg, getImages, getDokumentasiImage, onImageChange } = useDocumentImages({
+      startApiLoading,
+      stopApiLoading,
+      loading,
+    })
+
     // fetch data dealer
     const getDealers = async (nama = null, kdcab = null) => {
       startApiLoading('Mengambil data dealer...')
@@ -662,7 +701,7 @@ export default {
         var kdcab = selectedCabang.value
 
         // fetch data dealer		
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/dealer`, {
+        const response = await imageUploadModel.fetchDealers({
           nama,
           kdcab,
         })
@@ -682,7 +721,7 @@ export default {
       startApiLoading('Mengambil daftar nomor polisi...')
       try {
         // Fetch data dealer
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/nopol`, {
+        const response = await imageUploadModel.fetchNopols({
           noregfas,
         })
 
@@ -703,7 +742,7 @@ export default {
         // Fetch data dealer
         // console.log("Noregfas: ", noregfas)
         // console.log("Nofas: ", nofas)
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/ro`, {
+        const response = await imageUploadModel.fetchRO({
           noregfas,
           nofas,
           angsurke,
@@ -727,7 +766,7 @@ export default {
       // console.log(roke)
 
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/odometer`, {
+        const response = await imageUploadModel.fetchOdometer({
           nodealer, // dealer
           nofas,
           roke, // angsuran
@@ -755,7 +794,7 @@ export default {
       // console.log("Dealer Search: " , dealerQuery.value)
       try {
         // Fetch data dealer
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/dealer`, {
+        const response = await imageUploadModel.fetchDealers({
           query: dealerQuery.value
         })
         // const data = await response.json()
@@ -778,7 +817,7 @@ export default {
         noRegFas.value = item.noregfas
         // console.log("NoRegFas: ", noRegFas.value)
 
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/pencairan`, {
+        const response = await imageUploadModel.fetchPencairan({
           noregfas: item.noregfas,
         })
 
@@ -853,7 +892,7 @@ export default {
         loading.value = true
         dialogListPembiayaan.value = true
         // fetch data pembiayaan
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/pembiayaan`, {
+        const response = await imageUploadModel.fetchPembiayaan({
           noregfas: noRegFas.value,
         })
 
@@ -866,45 +905,7 @@ export default {
         if (!response.data) throw new Error('Fetch data pembiayaan gagal!');
 
         // simpan data ke list pembiayaan
-        listPembiayaan.value = response.data.map((item) => ({
-          'kode': item.KODE,
-          "nodealer": item.NODEALER,
-          "nmdealer": item.NMDEALER,
-          "nmdebitur": item.NMDEBITUR,
-          "nou": item.NOU,
-          "outstanding": item.OUTSTANDING,
-          "jthtempomou": item.JTHTEMPOMOU,
-          "plafond": item.PLAFOND,
-          "plfsisa": item.PLFSISA,
-          "baserate": item.BASERATE,
-          "marketing": item.MARKETING.length > 1 ? item.MARKETING[0] : item.MARKETING,
-          "tgltrn": item.TGLTRN,
-          "jnsproduk": item.JNSPRODUK,
-          "jnskend": item.JNSKEND,
-          "merkkend": item.MERKKEND,
-          "tipekend": item.TIPEKEND,
-          "warna": item.WARNA,
-          "thnbuat": item.THNBUAT,
-          "nopol": item.NOPOL,
-          "nobpkb": item.NOBPKB,
-          "odometer": item.ODOMETER,
-          "konkend": item.KONKEND,
-          "bpkbflg": item.BPKBFLG === '0' ? false : true,
-          "faktura": item.FAKTURA,
-          "fakturc": item.FAKTURC,
-          "ktpflg": item.KTPFLG === '0' ? false : true,
-          "nikflg": item.NIKFLG === '0' ? false : true,
-          "stnkflg": item.STNKFLG === '0' ? false : true,
-          "kwitansiflg": item.KWITANSIFLG === '0' ? false : true,
-          "nokanosin": item.NOKANOSIN,
-          "ketpbd": item.KETPBD,
-          "kodeao": item.KODEAO,
-          "nlpasar": item.NLPASAR,
-          "nominal": item.NOMINAL,
-          "persen": item.PERSEN,
-          "sphflg": item.SPHFLG === '0' ? false : true,
-          "kwjbflg": item.KWJBFLG === '0' ? false : true
-        }));
+        listPembiayaan.value = response.data.map((item) => mapPembiayaan(item))
 
         // // input data listpembiayaan ke list pembiayaan values
         // listPembiayaanValues.value = listPembiayaan.value
@@ -928,7 +929,7 @@ export default {
 
         console.log("User Id: ", user.userid)
         // data cabang hanya berdasarkan cabang-cabang sekategori dengan work area user login
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/cabang`, {
+        const response = await imageUploadModel.fetchCabang({
           userid: user.userid
         })
 
@@ -970,7 +971,7 @@ export default {
         var kdcab = selectedCabang.value
 
         // fetch data pembiayaan
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/pembiayaan/all`, {
+        const response = await imageUploadModel.fetchAllPembiayaan({
           kdcab: kdcab
         })
 
@@ -978,46 +979,7 @@ export default {
         if (!response.data) throw new Error('No data found!');
 
         // simpan data ke list pembiayaan
-        const resData = response.data.map((item) => ({
-          'kode': item.KODE,
-          'kdcab': item.KDCAB,
-          "nodealer": item.NODEALER,
-          "nmdealer": item.NMDEALER,
-          "nmdebitur": item.NMDEBITUR,
-          "nou": item.NOU,
-          "outstanding": item.OUTSTANDING,
-          "jthtempomou": item.JTHTEMPOMOU,
-          "plafond": item.PLAFOND,
-          "plfsisa": item.PLFSISA,
-          "baserate": item.BASERATE,
-          "marketing": item.MARKETING.length > 1 ? item.MARKETING[0] : item.MARKETING,
-          "tgltrn": item.TGLTRN,
-          "jnsproduk": item.JNSPRODUK,
-          "jnskend": item.JNSKEND,
-          "merkkend": item.MERKKEND,
-          "tipekend": item.TIPEKEND,
-          "warna": item.WARNA,
-          "thnbuat": item.THNBUAT,
-          "nopol": item.NOPOL,
-          "nobpkb": item.NOBPKB,
-          "odometer": item.ODOMETER,
-          "konkend": item.KONKEND,
-          "bpkbflg": item.BPKBFLG === '0' ? false : true,
-          "faktura": item.FAKTURA,
-          "fakturc": item.FAKTURC,
-          "ktpflg": item.KTPFLG === '0' ? false : true,
-          "nikflg": item.NIKFLG === '0' ? false : true,
-          "stnkflg": item.STNKFLG === '0' ? false : true,
-          "kwitansiflg": item.KWITANSIFLG === '0' ? false : true,
-          "nokanosin": item.NOKANOSIN,
-          "ketpbd": item.KETPBD,
-          "kodeao": item.KODEAO,
-          "nlpasar": item.NLPASAR,
-          "nominal": item.NOMINAL,
-          "persen": item.PERSEN,
-          "sphflg": item.SPHFLG === '0' ? false : true,
-          "kwjbflg": item.KWJBFLG === '0' ? false : true
-        }));
+        const resData = response.data.map((item) => mapPembiayaan(item, true))
 
         listPembiayaan.value = resData
         listPembiayaanValues.value = resData
@@ -1028,42 +990,6 @@ export default {
         console.error('Gagal fetch data pembiayaan:', error)
       } finally {
         loading.value = false;
-        stopApiLoading()
-      }
-    }
-
-    // get data image
-    const getImages = async (noregfas = null, noupencairan = null, nofas = null, roke = null, type = '1') => {
-      startApiLoading('Mengambil data gambar...')
-      try {
-        console.log('[DEBUG] Noregfas: ', noregfas, ' Noupencairan: ', noupencairan, ' Nofas: ', nofas, ' Roke: ', roke, ' Type: ', type);
-
-        // fetch data foto
-        const resFoto = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/images`, {
-          noregfas,
-          noupencairan,
-          nofas,
-          roke,
-          type,
-        })
-
-        // DEBUG: json response
-        console.log("Data Foto", resFoto)
-
-        // simpan data image di state dokimg, agar dapat di-preview
-        resFoto.data.forEach(img => {
-          dokimg.value.forEach(item => {
-            if (item.kode === img.kode) {
-              item.src = img.image
-            }
-          })
-        })
-
-        return resFoto.data
-      } catch (error) {
-        console.error('Gagal fetch data gambar:', error)
-        return []
-      } finally {
         stopApiLoading()
       }
     }
@@ -1085,7 +1011,7 @@ export default {
         if (result.isConfirmed) {
           // 2 | jalankan proses mendelete gambar jika user memang memilih untuk mendelete gambar
           try {
-            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/images/delete`, {
+            const res = await imageUploadModel.deleteImage({
               nodealer,
               noupencairan,
               nofas,
@@ -1128,35 +1054,6 @@ export default {
       })
     }
 
-    // handler perubahan gambar upload pada form penginputan gambar
-    const onImageChange = (index) => {
-      // data sekarang disimpan di `dokimg`
-
-      // TODO: cari panjang dan tinggi dari image
-      dokimg.value[index].height = '200' // cari nanti!
-      dokimg.value[index].width = '200' // cari nanti!
-
-      const file = dokimg.value[index].file;
-      if (file && file instanceof File) {
-        const reader = new FileReader()
-        reader.onload = e => {
-          // // mencari panjang dan lebar dari gambar
-          // const img = new Image()
-          // img.onload = () => {
-          //   imageList.value[index].width = img.width
-          //   imageList.value[index].height = img.height
-          // }
-          dokimg.value[index].src = e.target.result
-          // simpan url gambar
-        }
-        reader.readAsDataURL(file)
-      } else {
-        dokimg.value[index].src = null
-      }
-
-      console.log("Daftar Image: ", dokimg.value)
-    }
-
     const onImageChange2 = (index) => {
       // data sekarang disimpan di `dokimg`
 
@@ -1189,8 +1086,7 @@ export default {
     // API update data pembiayaan
     async function updatePembiayaan() {
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/pembiayaan/updatevalue: `,
-          {
+        const response = await imageUploadModel.updatePembiayaan({
             tgltrn: pembiayaanBody.value.tgltrn,
             jnsproduk: pembiayaanBody.value.jnsproduk,
             jnskend: pembiayaanBody.value.jnskend,
@@ -1215,8 +1111,7 @@ export default {
             sphflg: pembiayaanBody.value.sphflg,
             kwjbflg: pembiayaanBody.value.kwjbflg,
             fakturc: pembiayaanBody.value.fakturc,
-          }
-        );
+          })
       } catch (error) {
         console.error(error);
         alert("Gagal mengupdate data data pembiayaan");
@@ -1224,42 +1119,67 @@ export default {
     }
 
     // API upload image
-    async function uploadImage(type, dialogList = []) {
-      // hilangkan dialog
-      toggleDialog(dialogList)
+    async function uploadImage(type) {
+      const missingFields = []
+      const invalidFields = []
+      // [1] prevent upload jika RO-ke missing
+      const isROMissing = type === '2'
+        && (selectedRO.value === null || selectedRO.value === undefined || selectedRO.value === '')
 
-      const formData = new FormData();
-      // type menentukan jenis flow upload image antara pembiayaan atau perpanjangan RO
+      // [2] check apakah semua field upload gambar wajib sudah diisi
+      dokimg.value.forEach((field) => {
+        const hasSelectedFile = Boolean(field.file)
+        const isValidImage = field.file instanceof File
+          && field.file.type.startsWith('image/')
+          && field.file.size > 0
 
-      // append data gambar dan header-header yang berkaitan (height, width, kode)
-
-      // 1 | filter field-field gambar yang mengalami perubahan
-      const imgList = dokimg.value.filter((x) => x.file)
-
-      // 2 | cegah user untuk mengupload image jika ada field wajib yang belum terisi
-      var validation = false
-      dokimg.value.forEach((element, index) => {
-        if (!element.src && element.flag === 'M') {
-          validation = true
+        if (hasSelectedFile && !isValidImage) {
+          invalidFields.push(field.keterangan || field.kode)
+        } else if (field.flag === 'M' && !field.src && !isValidImage) {
+          missingFields.push(field.keterangan || field.kode)
         }
-      });
-      if (validation) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Form Wajib Belum Lengkap!',
-          text: 'Semua foto wajib harus di upload terlebih dahulu.',
-          confirmButtonColor: '#d33',
-          confirmButtonText: 'Tutup',
-          customClass: {
-            popup: 'swal-top-z'
-          }
-        }).then(() => {
-          toggleDialog(dialogList)
-        })
+      })
+
+      // [3] prevent upload foto berlanjut jika ada error
+      if (missingFields.length || invalidFields.length || isROMissing) {
+        const validationMessages = []
+        if (isROMissing) {
+          validationMessages.push('RO Ke belum dipilih.')
+        }
+        if (missingFields.length) {
+          validationMessages.push(`Foto wajib belum diisi:\n- ${missingFields.join('\n- ')}`)
+        }
+        if (invalidFields.length) {
+          validationMessages.push(`File tidak valid (pilih gambar yang tidak kosong):\n- ${invalidFields.join('\n- ')}`)
+        }
+
+        const restoreDialogs = await closeOpenDialogs()
+        try {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Periksa kembali foto',
+            text: validationMessages.join('\n\n'),
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Tutup',
+            customClass: {
+              container: 'swal-top-container',
+              popup: 'swal-top-z'
+            }
+          })
+        } finally {
+          restoreDialogs()
+        }
         return
       }
 
-      // 3 | append metadata gambar
+      const restoreDialogs = await closeOpenDialogs()
+
+      console.log("RO-ke: ", selectedRO.value ? selectedRO.value.toString() : ''); // simpan roke sebagai string
+
+      const formData = new FormData();
+      const imgList = dokimg.value.filter((field) => field.file)
+
+      // [4] | append metadata gambar
       imgList.forEach(field => {
         // formData.append('kode', field.kode) // kode
         formData.append(`${field.kode}`, field.file) // file gambar BLOB
@@ -1268,20 +1188,21 @@ export default {
         formData.append(`width-${field.kode}`, field.width) // lebar
       });
 
-      // 4 | append data headers
+      // [5] | append data headers
       if (type === '1') {
         formData.append('nodealer', pencairanBody.value.nodealer) // nomor dealer
         formData.append('noupencairan', pencairanBody.value.nou) // nomor urut pencairan
       } else {
         formData.append('nofas', selectedNopol.value.nofas) // nofas
-        formData.append('roke', selectedRO.value) // roke
+        // TODO: pastikan nilai ro-ke tidak dapat kosong
+        formData.append('roke', selectedRO.value) // ro-ke
       }
       formData.append('nourut', pembiayaanBody.value.nou) // nomor urut gambar
       formData.append('flag', '1') // TODO: isi flag
       formData.append('kode', pembiayaanBody.value.kode) // kode pembiayaan
       formData.append('type', type) // tipe
 
-      // 5 | request http
+      // [6] | upload gambar
       try {
         Swal.fire({
           title: 'Mengunggah gambar...',
@@ -1289,51 +1210,60 @@ export default {
           allowOutsideClick: false,
           didOpen: () => {
             Swal.showLoading()
-          }
+          },
+          customClass: {
+            container: 'swal-top-container',
+          },
         })
 
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/uploadbulk`, formData, {
-          "Content-Type": "multipart/form-data",
-        });
+        const response = await imageUploadModel.uploadBulk(formData)
+        console.log("RESPONSE: ", response);
 
         // tentukan response berdasarkan response HTTP
         if ([201, '201'].includes(response.status)) {
-          Swal.fire({
+          await Swal.fire({
             icon: 'success',
             title: 'Berhasil!',
             text: 'Foto-foto berhasil di-upload.',
             timer: 2000,
             confirmButtonColor: '#3085d6',
             confirmButtonText: 'OK',
-          }).then((result) => {
-            toggleDialog(dialogList)
+            customClass: {
+              container: 'swal-top-container',
+            },
           })
         } else {
-          Swal.fire({
+          await Swal.fire({
             icon: 'error',
             title: 'Upload Foto Gagal!',
-            text: 'Ada masalah dalam penguploadan foto.',
+            text: response.message ?? 'Ada masalah dalam proses upload foto.',
             confirmButtonColor: '#d33',
             confirmButtonText: 'Tutup',
-          }).then(() => {
-            toggleDialog(dialogList)
+            customClass: {
+              container: 'swal-top-container',
+            },
           })
         }
 
         // // const result = await response.json();
         // alert(response.data.message);
       } catch (err) {
+        console.log("ERROR RESPONSE: ", err);
+
+        const errMsg = err.response?.data?.message || err.response?.data?.error || err.message || 'Terjadi kesalahan saat proses mengupload foto.'
         console.error(err);
-        Swal.fire({
+        await Swal.fire({
           icon: 'error',
           title: 'Error!',
-          text: err,
+          text: errMsg,
           confirmButtonColor: '#d33',
           confirmButtonText: 'Tutup',
-        }).then(() => {
-          toggleDialog(dialogList)
+          customClass: {
+            container: 'swal-top-container',
+          },
         })
-
+      } finally {
+        restoreDialogs()
       }
     }
 
@@ -1370,9 +1300,7 @@ export default {
       }
 
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/uploadbulk2`, JSON.stringify(payload), {
-          'Content-Type': 'application/json',
-        });
+        const response = await imageUploadModel.uploadBulkLegacy(JSON.stringify(payload))
         // const result = await response.json();
         alert(response.data.message);
       } catch (err) {
@@ -1395,27 +1323,6 @@ export default {
           }
         })
       })
-    }
-
-    // API daftar dokumentasi image
-    async function getDokumentasiImage(tipe = 'P') {
-      startApiLoading('Mengambil daftar dokumentasi gambar...')
-      try {
-        // Fetch data dealer
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/dokimg`, {
-          tipe,
-        })
-
-        dokimg.value = response.data
-        console.log("Daftar Dok. Img: ", dokimg.value)
-
-      } catch (error) {
-        console.error('Gagal fetch data:', error)
-        dokimg.value = []
-      } finally {
-        loading.value = false
-        stopApiLoading()
-      }
     }
 
     // TODO: mengubah data pembiayaan berdasarkan search query
@@ -1567,6 +1474,10 @@ export default {
 <style>
 .swal-top-z {
   z-index: 9999 !important;
+}
+
+.swal-top-container {
+  z-index: 100000 !important;
 }
 
 .api-loading-dialog,
