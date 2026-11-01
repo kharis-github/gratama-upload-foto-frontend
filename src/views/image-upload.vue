@@ -5,9 +5,9 @@
       class="api-loading-dialog">
       <v-card class="text-center pa-4">
         <!-- <v-progress-circular indeterminate color="primary" size="60" width="6"></v-progress-circular> -->
-         <div class="mx-auto">
-           <VueSpinnerRing size="80" color="#00afff"/>
-         </div>
+        <div class="mx-auto">
+          <VueSpinnerRing size="80" color="#00afff" />
+        </div>
         <div class="mt-4">
           <span class="subtitle-1">{{ loadingMessage }}</span>
         </div>
@@ -33,10 +33,10 @@
                   await getAllPembiayaan() // get semua data pembiayaan 
                 }" size="100" color="secondary" />
               </v-col>
-              <v-col>
+              <!-- <v-col>
                 <MenuButton icon="mdi-check-circle-outline" buttonText="Perpanjangan RO"
                   :onClick="openDialogPerpanjanganRO" size="100" color="warning" />
-              </v-col>
+              </v-col> -->
             </v-row>
           </v-container>
 
@@ -314,9 +314,10 @@
           <v-container grid-list-md>
             <v-form @submit.prevent="uploadImage('1')">
               <v-row>
+                <!-- TODO: image wajib hanya diset sebagai readonly (untuk prevent user dari mengubah data) -->
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
                   <v-file-input v-model="field.file" accept="image/*" :name="field.kode" prepend-icon="mdi-image"
-                    @change="onImageChange(index)" variant="outlined"
+                    @change="onImageChange(index)" variant="outlined" :disabled="!field.keterangan.toLowerCase().includes('lain')"
                     :rules="field.flag === 'M' && !field.src ? [requiredRule] : []">
                     <template v-slot:label>
                       <span :class="(field.flag === 'M' && !field.src) ? `text-red` : ``">{{ field.flag === 'M' ? `*
@@ -324,7 +325,7 @@
                       }}</span>
                     </template>
                   </v-file-input>
-                  <ImageWithDelete v-if="field.src" :imageUrl="field.src"
+                  <ImageWithDelete v-if="field.src" :imageUrl="field.src" :isWajib="!field.keterangan.toLowerCase().includes('lain')"
                     @delete="deleteImage(field.kode, index, pencairanBody.nodealer, pencairanBody.nou, null, null, '1', ['pencairan', 'detail-unit'])" />
                   <!-- <v-img v-if="field.src" :src="field.src" max-height="200" class="my-4"
                     @click="deleteImage(field.kode, index)"></v-img> -->
@@ -337,7 +338,7 @@
               </v-row>
               <v-btn color="primary" type="submit">Upload Foto</v-btn>
             </v-form>
-            
+
           </v-container>
         </v-card-text>
         <!-- <v-card-actions>
@@ -454,14 +455,14 @@
                 <v-col v-for="(field, index) in dokimg" :key="field.kode" cols="12" sm="6">
                   <v-file-input v-model="field.file" accept="image/*" :name="field.kode" prepend-icon="mdi-image"
                     @change="onImageChange(index)" variant="outlined"
-                    :rules="field.flag === 'M' && !field.src ? [requiredRule] : []">
+                    :rules="field.flag === 'M' && !field.src ? [requiredRule] : []" :disabled="!field.keterangan.toLowerCase().includes('lain')">
                     <template v-slot:label>
                       <span :class="(field.flag === 'M' && !field.src) ? `text-red` : ``">{{ field.flag === 'M' ? `*
                         ${field.keterangan}` : field.keterangan
                       }}</span>
                     </template>
                   </v-file-input>
-                  <ImageWithDelete v-if="field.src" :imageUrl="field.src"
+                  <ImageWithDelete v-if="field.src" :imageUrl="field.src" :isWajib="!field.keterangan.toLowerCase().includes('lain')"
                     @delete="deleteImage(field.kode, index, null, null, selectedNopol.nofas, selectedRO, '2', ['perpanjangan-ro', 'odometer'])" />
                 </v-col>
               </v-row>
@@ -1087,31 +1088,31 @@ export default {
     async function updatePembiayaan() {
       try {
         const response = await imageUploadModel.updatePembiayaan({
-            tgltrn: pembiayaanBody.value.tgltrn,
-            jnsproduk: pembiayaanBody.value.jnsproduk,
-            jnskend: pembiayaanBody.value.jnskend,
-            merkkend: pembiayaanBody.value.merkkend,
-            thnbuat: pembiayaanBody.value.thnbuat,
-            warna: pembiayaanBody.value.warna,
-            tipekend: pembiayaanBody.value.tipekend,
-            nopol: pembiayaanBody.value.nopol,
-            nobpkb: pembiayaanBody.value.nobpkb,
-            odometer: pembiayaanBody.value.odometer,
-            konkend: pembiayaanBody.value.konkend,
-            nlpasar: pembiayaanBody.value.nlpasar,
-            nominal: pembiayaanBody.value.nominal,
-            persen: pembiayaanBody.value.persen,
-            bpkbflg: pembiayaanBody.value.bpkbflg,
-            faktura: pembiayaanBody.value.faktura,
-            ktpflg: pembiayaanBody.value.ktpflg,
-            nikflg: pembiayaanBody.value.nikflg,
-            stnkflg: pembiayaanBody.value.stnkflg,
-            kwitansiflg: pembiayaanBody.value.kwitansiflg,
-            nokanosin: pembiayaanBody.value.nokanosin,
-            sphflg: pembiayaanBody.value.sphflg,
-            kwjbflg: pembiayaanBody.value.kwjbflg,
-            fakturc: pembiayaanBody.value.fakturc,
-          })
+          tgltrn: pembiayaanBody.value.tgltrn,
+          jnsproduk: pembiayaanBody.value.jnsproduk,
+          jnskend: pembiayaanBody.value.jnskend,
+          merkkend: pembiayaanBody.value.merkkend,
+          thnbuat: pembiayaanBody.value.thnbuat,
+          warna: pembiayaanBody.value.warna,
+          tipekend: pembiayaanBody.value.tipekend,
+          nopol: pembiayaanBody.value.nopol,
+          nobpkb: pembiayaanBody.value.nobpkb,
+          odometer: pembiayaanBody.value.odometer,
+          konkend: pembiayaanBody.value.konkend,
+          nlpasar: pembiayaanBody.value.nlpasar,
+          nominal: pembiayaanBody.value.nominal,
+          persen: pembiayaanBody.value.persen,
+          bpkbflg: pembiayaanBody.value.bpkbflg,
+          faktura: pembiayaanBody.value.faktura,
+          ktpflg: pembiayaanBody.value.ktpflg,
+          nikflg: pembiayaanBody.value.nikflg,
+          stnkflg: pembiayaanBody.value.stnkflg,
+          kwitansiflg: pembiayaanBody.value.kwitansiflg,
+          nokanosin: pembiayaanBody.value.nokanosin,
+          sphflg: pembiayaanBody.value.sphflg,
+          kwjbflg: pembiayaanBody.value.kwjbflg,
+          fakturc: pembiayaanBody.value.fakturc,
+        })
       } catch (error) {
         console.error(error);
         alert("Gagal mengupdate data data pembiayaan");
